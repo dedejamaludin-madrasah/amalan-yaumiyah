@@ -57,6 +57,9 @@
                 .eq('password', passIn) // Note: Utk app sederhana ini oke, utk production password harus di-hash
                 .single();
 
+            console.log("Data:", data);
+            console.log("Error:", error);
+            
             if (error || !data) {
                 errMsg.textContent = "Username atau Password salah!";
                 errMsg.classList.remove('hidden');
@@ -68,4 +71,5 @@
         });
     </script>
 </body>
+
 </html>
