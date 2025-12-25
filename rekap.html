@@ -7,32 +7,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { background-color: #f8fafc; padding-bottom: 100px; }</style>
+    <style>
+        body { background-color: #f8fafc; padding-bottom: 100px; }
+        .details-box { transition: max-height 0.3s ease-out; max-height: 0; overflow: hidden; }
+        .expanded .details-box { max-height: 500px; transition: max-height 0.5s ease-in; }
+        .chevron { transition: transform 0.3s; }
+        .expanded .chevron { transform: rotate(180deg); }
+    </style>
 </head>
 <body>
 
     <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="font-bold text-2xl tracking-tight">Jurnal Ibadah</h1>
-                <p class="text-emerald-100 text-xs mt-1">Istiqomah setiap hari</p>
-            </div>
-            <i class="fa-solid fa-clock-rotate-left text-3xl text-emerald-800 opacity-50"></i>
-        </div>
+        <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
+        <p class="text-emerald-100 text-xs">Klik kartu untuk melihat rincian</p>
     </div>
 
-    <div id="listContainer" class="px-4 max-w-md mx-auto space-y-4">
+    <div id="listContainer" class="px-4 max-w-md mx-auto space-y-3">
         <p class="text-center text-gray-400 mt-10 animate-pulse">Memuat riwayat...</p>
     </div>
 
-    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-around py-3 border border-gray-100 max-w-md mx-auto z-50">
-        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
+    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
+        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
             <i class="fa-solid fa-pen-to-square text-xl mb-1"></i>
             <span class="text-[10px] font-bold">Input</span>
         </a>
         <a href="rekap.html" class="flex flex-col items-center text-emerald-600">
-            <i class="fa-solid fa-chart-simple text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Rekap</span>
+            <i class="fa-solid fa-list-check text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">Jurnal</span>
+        </a>
+        <a href="stats.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
+            <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">Statistik</span>
         </a>
     </div>
 
@@ -41,75 +46,75 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // Helper untuk badge
-        const badge = (text, colorClass) => `
-            <span class="px-2 py-1 rounded-md text-[10px] font-bold ${colorClass}">
-                ${text}
-            </span>`;
+        // Definisi Target Minimal untuk mendapat Ceklis Hijau
+        const TARGETS = {
+            shalat_jamaah: 5,
+            shalat_rawatib: 10, // Anggap 10 rakaat sudah bagus
+            shalat_tahajjud: 2,
+            shalat_dhuha: 2,
+            tilawah_juz: 1,
+            matsurat: 1
+        };
 
         async function loadHistory() {
             const { data } = await db.from('daily_amalan')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('date', { ascending: false })
-                .limit(30); // 30 hari terakhir
+                .limit(30);
             
             const container = document.getElementById('listContainer');
             container.innerHTML = '';
 
             if(!data || data.length === 0) {
-                container.innerHTML = `
-                <div class="text-center text-gray-400 mt-10">
-                    <i class="fa-solid fa-folder-open text-4xl mb-2"></i>
-                    <p>Belum ada data amalan.</p>
-                </div>`;
+                container.innerHTML = '<p class="text-center text-gray-400">Belum ada data.</p>';
                 return;
             }
 
             data.forEach(item => {
-                // Format Tanggal: "Senin, 25 Des"
                 const dateObj = new Date(item.date);
-                const dayName = dateObj.toLocaleDateString('id-ID', { weekday: 'long' });
-                const dateNum = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
 
-                // Logic Badge (Tampilkan hanya jika ada isinya)
-                let badges = [];
-                if(item.shalat_jamaah >= 5) badges.push(badge('Jamaah Full', 'bg-blue-100 text-blue-700'));
-                else if(item.shalat_jamaah > 0) badges.push(badge(`Jamaah ${item.shalat_jamaah}`, 'bg-blue-50 text-blue-600'));
-                
-                if(item.tilawah_juz >= 1) badges.push(badge(`${item.tilawah_juz} Juz`, 'bg-purple-100 text-purple-700'));
-                if(item.shaum_sunnah) badges.push(badge('Puasa', 'bg-pink-100 text-pink-700'));
-                if(item.infaq) badges.push(badge('Infaq', 'bg-yellow-100 text-yellow-700'));
-                if(item.olahraga) badges.push(badge('Olahraga', 'bg-orange-100 text-orange-700'));
-                
-                // Jika kosong sama sekali
-                if(badges.length === 0) badges.push(`<span class="text-xs text-gray-400 italic">Tidak ada catatan khusus</span>`);
+                // Cek Pencapaian
+                const achieved = [];
+                if(item.shalat_jamaah >= TARGETS.shalat_jamaah) achieved.push('Jamaah');
+                if(item.shalat_tahajjud >= TARGETS.shalat_tahajjud) achieved.push('Tahajjud');
+                if(item.tilawah_juz >= TARGETS.tilawah_juz) achieved.push('Tilawah');
+                if(item.shaum_sunnah) achieved.push('Puasa');
+                if(item.infaq) achieved.push('Infaq');
+
+                // Render Ringkasan (Hanya Icon Ceklis Hijau)
+                let summaryIcons = '';
+                if(achieved.length > 0) {
+                    summaryIcons = `<div class="flex gap-1 flex-wrap text-emerald-600 text-xs">
+                        ${achieved.map(a => `<span class="bg-emerald-100 px-2 py-1 rounded-full"><i class="fa-solid fa-check mr-1"></i>${a}</span>`).join('')}
+                    </div>`;
+                } else {
+                    summaryIcons = `<span class="text-xs text-gray-400 italic">Tidak ada target tercapai</span>`;
+                }
 
                 const html = `
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex">
-                        <div class="bg-emerald-50 w-20 flex flex-col justify-center items-center p-2 text-emerald-800 border-r border-gray-100">
-                            <span class="text-xs font-semibold uppercase tracking-wider">${dayName.substr(0,3)}</span>
-                            <span class="text-2xl font-bold leading-none">${dateObj.getDate()}</span>
-                            <span class="text-[10px] opacity-75">${dateObj.toLocaleDateString('id-ID', { month: 'short' })}</span>
-                        </div>
-                        
-                        <div class="p-3 flex-1">
-                            <div class="flex flex-wrap gap-1 mb-2">
-                                ${badges.join('')}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer" onclick="toggleCard(this)">
+                        <div class="p-4 flex justify-between items-center">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-gray-800">${dateStr}</h3>
+                                <div class="mt-2">${summaryIcons}</div>
                             </div>
-                            
-                            <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-dashed border-gray-200">
-                                <div class="text-center">
-                                    <p class="text-[9px] text-gray-400">Rawatib</p>
-                                    <p class="font-bold text-xs text-gray-700">${item.shalat_rawatib || 0}</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-[9px] text-gray-400">Tahajjud</p>
-                                    <p class="font-bold text-xs text-gray-700">${item.shalat_tahajjud || 0}</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-[9px] text-gray-400">Dhuha</p>
-                                    <p class="font-bold text-xs text-gray-700">${item.shalat_dhuha || 0}</p>
+                            <i class="fa-solid fa-chevron-down text-gray-300 chevron"></i>
+                        </div>
+
+                        <div class="details-box bg-gray-50 border-t border-gray-100">
+                            <div class="p-4 grid grid-cols-2 gap-y-3 text-sm text-gray-600">
+                                <div class="flex justify-between border-b border-gray-200 pb-1 mr-2"><span>🕌 Jamaah</span> <span class="font-bold text-gray-800">${item.shalat_jamaah}/5</span></div>
+                                <div class="flex justify-between border-b border-gray-200 pb-1 ml-2"><span>☀️ Rawatib</span> <span class="font-bold text-gray-800">${item.shalat_rawatib} Rkt</span></div>
+                                <div class="flex justify-between border-b border-gray-200 pb-1 mr-2"><span>🌙 Tahajjud</span> <span class="font-bold text-gray-800">${item.shalat_tahajjud} Rkt</span></div>
+                                <div class="flex justify-between border-b border-gray-200 pb-1 ml-2"><span>🌤️ Dhuha</span> <span class="font-bold text-gray-800">${item.shalat_dhuha} Rkt</span></div>
+                                <div class="flex justify-between border-b border-gray-200 pb-1 mr-2"><span>📖 Tilawah</span> <span class="font-bold text-gray-800">${item.tilawah_juz} Juz</span></div>
+                                <div class="flex justify-between border-b border-gray-200 pb-1 ml-2"><span>🤲 Matsurat</span> <span class="font-bold text-gray-800">${item.matsurat}x</span></div>
+                                <div class="col-span-2 flex gap-4 mt-2 justify-center">
+                                    <span class="${item.infaq ? 'text-green-600 font-bold' : 'text-gray-400'}"><i class="fa-solid fa-hand-holding-dollar"></i> Infaq</span>
+                                    <span class="${item.shaum_sunnah ? 'text-blue-600 font-bold' : 'text-gray-400'}"><i class="fa-solid fa-utensils"></i> Puasa</span>
+                                    <span class="${item.olahraga ? 'text-orange-600 font-bold' : 'text-gray-400'}"><i class="fa-solid fa-person-running"></i> Olahraga</span>
                                 </div>
                             </div>
                         </div>
@@ -118,6 +123,15 @@
                 container.innerHTML += html;
             });
         }
+
+        function toggleCard(element) {
+            // Tutup yang lain dulu (opsional, biar rapi)
+            document.querySelectorAll('.expanded').forEach(el => {
+                if(el !== element) el.classList.remove('expanded');
+            });
+            element.classList.toggle('expanded');
+        }
+
         loadHistory();
     </script>
 </body>
