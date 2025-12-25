@@ -19,7 +19,7 @@
 
     <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
         <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
-        <p class="text-emerald-100 text-xs">Evaluasi harian (Hijau = Tuntas, Merah = Belum)</p>
+        <p class="text-emerald-100 text-xs">Evaluasi harian (Klik kartu untuk detail)</p>
     </div>
 
     <div id="listContainer" class="px-4 max-w-md mx-auto space-y-3">
@@ -46,7 +46,7 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // Definisi Target & Label Pendek
+        // Konfigurasi Target
         const ITEMS = [
             { key: 'shalat_jamaah', label: 'Jamaah', target: 5 },
             { key: 'shalat_rawatib', label: 'Rawatib', target: 12 },
@@ -78,17 +78,15 @@
                 const dateObj = new Date(item.date);
                 const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
 
-                // Generate 9 Badges (Compact Grid)
+                // 1. Generate Badges (Ringkasan Depan)
                 let badgesHTML = '';
                 ITEMS.forEach(conf => {
                     const val = item[conf.key] || 0;
-                    // Cek sukses: jika target boolean (true) atau angka (>= target)
                     const isSuccess = conf.target === true ? val : val >= conf.target;
                     
                     const colorClass = isSuccess 
                         ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-                        : 'bg-red-50 text-red-400 border-red-100 opacity-80';
-                    
+                        : 'bg-red-50 text-red-400 border-red-100 opacity-60';
                     const icon = isSuccess ? 'fa-check' : 'fa-xmark';
 
                     badgesHTML += `
@@ -96,6 +94,31 @@
                             <i class="fa-solid ${icon}"></i> ${conf.label}
                         </div>
                     `;
+                });
+
+                // 2. Generate Detail Grid (Hanya 6 Item Angka)
+                const detailList = [
+                    { label: 'Jamaah', val: item.shalat_jamaah, max: 5, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Rawatib', val: item.shalat_rawatib, max: 12, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
+                    { label: 'Tahajjud', val: item.shalat_tahajjud, max: 2, icon: 'fa-moon', color: 'text-indigo-600 bg-indigo-50' },
+                    { label: 'Dhuha', val: item.shalat_dhuha, max: 2, icon: 'fa-sun', color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Tilawah', val: item.tilawah_juz, max: 1, unit:'Juz', icon: 'fa-book-quran', color: 'text-green-600 bg-green-50' },
+                    { label: 'Matsurat', val: item.matsurat, max: 1, unit:'x', icon: 'fa-book-open-reader', color: 'text-teal-600 bg-teal-50' },
+                ];
+
+                let detailsHTML = '';
+                detailList.forEach(d => {
+                   detailsHTML += `
+                    <div class="flex items-center gap-3 p-2 bg-white rounded shadow-sm border border-gray-100">
+                        <div class="w-8 h-8 rounded-full ${d.color} flex items-center justify-center text-xs">
+                            <i class="fa-solid ${d.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">${d.label}</p>
+                            <p class="text-sm font-bold text-gray-800">${d.val || 0} <span class="text-[10px] text-gray-400 font-normal">/ ${d.unit || d.max}</span></p>
+                        </div>
+                    </div>
+                   `;
                 });
 
                 const html = `
@@ -111,13 +134,8 @@
                         </div>
 
                         <div class="details-box bg-gray-50 border-t border-gray-100">
-                            <div class="p-4 grid grid-cols-2 gap-y-2 text-xs text-gray-600">
-                                <div>Jamaah: <b class="text-gray-900">${item.shalat_jamaah}</b>/5</div>
-                                <div>Rawatib: <b class="text-gray-900">${item.shalat_rawatib}</b>/12</div>
-                                <div>Tahajjud: <b class="text-gray-900">${item.shalat_tahajjud}</b>/2</div>
-                                <div>Dhuha: <b class="text-gray-900">${item.shalat_dhuha}</b>/2</div>
-                                <div>Tilawah: <b class="text-gray-900">${item.tilawah_juz}</b> Juz</div>
-                                <div>Matsurat: <b class="text-gray-900">${item.matsurat}</b> x</div>
+                            <div class="p-3 grid grid-cols-2 gap-2">
+                                ${detailsHTML}
                             </div>
                         </div>
                     </div>
@@ -127,7 +145,6 @@
         }
 
         function toggleCard(element) {
-            // Tutup yang lain (accordion effect)
             document.querySelectorAll('.expanded').forEach(el => {
                 if(el !== element) el.classList.remove('expanded');
             });
