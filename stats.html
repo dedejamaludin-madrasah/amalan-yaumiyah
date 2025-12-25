@@ -12,20 +12,27 @@
 <body>
 
     <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
-        <h1 class="font-bold text-2xl">Capaian Amalan</h1>
-        
-        <div class="flex gap-4 text-xs text-white mt-2 mb-4">
-            <div class="flex items-center gap-2">
-                <div class="w-3 h-3 bg-blue-500 rounded border border-white/50"></div> 
-                <span class="font-medium">Saya</span>
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="font-bold text-2xl">Capaian Amalan</h1>
+                <div class="flex gap-4 text-xs text-white mt-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-blue-500 rounded border border-white/50"></div> 
+                        <span class="font-medium">Saya</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-gray-400 rounded border border-white/50"></div> 
+                        <span class="font-medium">Rata-rata Pegawai</span>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="w-3 h-3 bg-gray-400 rounded border border-white/50"></div> 
-                <span class="font-medium">Rata-rata Pegawai</span>
-            </div>
+            
+            <button onclick="logout()" class="bg-emerald-800 p-2 rounded-full text-xs hover:bg-emerald-900 transition shadow-sm">
+                <i class="fa-solid fa-power-off text-white"></i>
+            </button>
         </div>
 
-        <div class="flex bg-emerald-800/30 p-1 rounded-lg backdrop-blur-sm">
+        <div class="flex bg-emerald-800/30 p-1 rounded-lg backdrop-blur-sm mt-4">
             <button onclick="switchMode('today')" id="btnToday" class="flex-1 py-1.5 rounded-md text-xs font-bold transition shadow-sm bg-white text-emerald-700">Hari Ini</button>
             <button onclick="switchMode('month')" id="btnMonth" class="flex-1 py-1.5 rounded-md text-xs font-bold transition text-emerald-100 hover:text-white">Bulan Ini</button>
         </div>
@@ -55,14 +62,14 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // KONFIGURASI TARGET BARU
+        // KONFIGURASI TARGET LENGKAP
         const CONFIG = [
-            { key: 'shalat_jamaah', label: 'Shalat Jamaah (Min 3)', target: 3 },
-            { key: 'shalat_rawatib', label: 'Rawatib (Min 6 Rkt)', target: 6 },
-            { key: 'shalat_tahajjud', label: 'Tahajjud (Min 2 Rkt)', target: 2 },
-            { key: 'shalat_dhuha', label: 'Shalat Dhuha', target: 2 },
-            { key: 'tilawah_juz', label: 'Tilawah (1 Juz)', target: 1 },
-            { key: 'matsurat', label: 'Matsurat (1x)', target: 1 },
+            { key: 'shalat_jamaah', label: 'Shalat Jamaah (Minimal 3 kali)', target: 3 },
+            { key: 'shalat_rawatib', label: 'Shalat Rawatib (Minimal 6 rakaat)', target: 6 },
+            { key: 'shalat_tahajjud', label: 'Shalat Tahajjud (Minimal 2 rakaat)', target: 2 },
+            { key: 'shalat_dhuha', label: 'Shalat Dhuha (Minimal 2 rakaat)', target: 2 },
+            { key: 'tilawah_juz', label: 'Tilawah (Minimal 1 juz)', target: 1 },
+            { key: 'matsurat', label: 'Matsurat (Minimal 1x)', target: 1 },
             { key: 'shaum_sunnah', label: 'Puasa Sunnah', target: true },
             { key: 'infaq', label: 'Infaq', target: true },
             { key: 'olahraga', label: 'Olahraga', target: true }
