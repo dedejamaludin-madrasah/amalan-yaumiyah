@@ -19,7 +19,7 @@
 
     <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
         <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
-        <p class="text-emerald-100 text-xs">Evaluasi harian (Klik kartu untuk detail)</p>
+        <p class="text-emerald-100 text-xs">Evaluasi harian (Hijau = Tuntas Sesuai Target)</p>
     </div>
 
     <div id="listContainer" class="px-4 max-w-md mx-auto space-y-3">
@@ -46,14 +46,14 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // Konfigurasi Target
+        // TARGET BARU DISINI
         const ITEMS = [
-            { key: 'shalat_jamaah', label: 'Jamaah', target: 5 },
-            { key: 'shalat_rawatib', label: 'Rawatib', target: 12 },
-            { key: 'shalat_tahajjud', label: 'Tahajjud', target: 2 },
+            { key: 'shalat_jamaah', label: 'Jamaah', target: 3 }, // Min 3
+            { key: 'shalat_rawatib', label: 'Rawatib', target: 6 }, // Min 6
+            { key: 'shalat_tahajjud', label: 'Tahajjud', target: 2 }, // Min 2
             { key: 'shalat_dhuha', label: 'Dhuha', target: 2 },
-            { key: 'tilawah_juz', label: 'Tilawah', target: 1 },
-            { key: 'matsurat', label: 'Matsurat', target: 1 },
+            { key: 'tilawah_juz', label: 'Tilawah', target: 1 }, // Min 1
+            { key: 'matsurat', label: 'Matsurat', target: 1 }, // Min 1
             { key: 'shaum_sunnah', label: 'Puasa', target: true },
             { key: 'infaq', label: 'Infaq', target: true },
             { key: 'olahraga', label: 'Sport', target: true }
@@ -78,7 +78,7 @@
                 const dateObj = new Date(item.date);
                 const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
 
-                // 1. Generate Badges (Ringkasan Depan)
+                // 1. Generate Badges (Ceklis Hijau jika target terpenuhi)
                 let badgesHTML = '';
                 ITEMS.forEach(conf => {
                     const val = item[conf.key] || 0;
@@ -96,14 +96,14 @@
                     `;
                 });
 
-                // 2. Generate Detail Grid (Hanya 6 Item Angka)
+                // 2. Generate Detail Grid
                 const detailList = [
-                    { label: 'Jamaah', val: item.shalat_jamaah, max: 5, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
-                    { label: 'Rawatib', val: item.shalat_rawatib, max: 12, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
-                    { label: 'Tahajjud', val: item.shalat_tahajjud, max: 2, icon: 'fa-moon', color: 'text-indigo-600 bg-indigo-50' },
-                    { label: 'Dhuha', val: item.shalat_dhuha, max: 2, icon: 'fa-sun', color: 'text-orange-600 bg-orange-50' },
-                    { label: 'Tilawah', val: item.tilawah_juz, max: 1, unit:'Juz', icon: 'fa-book-quran', color: 'text-green-600 bg-green-50' },
-                    { label: 'Matsurat', val: item.matsurat, max: 1, unit:'x', icon: 'fa-book-open-reader', color: 'text-teal-600 bg-teal-50' },
+                    { label: 'Jamaah', val: item.shalat_jamaah, max: 5, target: 3, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Rawatib', val: item.shalat_rawatib, max: 12, target: 6, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
+                    { label: 'Tahajjud', val: item.shalat_tahajjud, max: 11, target: 2, icon: 'fa-moon', color: 'text-indigo-600 bg-indigo-50' },
+                    { label: 'Dhuha', val: item.shalat_dhuha, max: 8, target: 2, icon: 'fa-sun', color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Tilawah', val: item.tilawah_juz, max: 1, unit:'Juz', target: 1, icon: 'fa-book-quran', color: 'text-green-600 bg-green-50' },
+                    { label: 'Matsurat', val: item.matsurat, max: 2, unit:'x', target: 1, icon: 'fa-book-open-reader', color: 'text-teal-600 bg-teal-50' },
                 ];
 
                 let detailsHTML = '';
@@ -115,7 +115,7 @@
                         </div>
                         <div>
                             <p class="text-[10px] text-gray-400 uppercase font-bold">${d.label}</p>
-                            <p class="text-sm font-bold text-gray-800">${d.val || 0} <span class="text-[10px] text-gray-400 font-normal">/ ${d.unit || d.max}</span></p>
+                            <p class="text-sm font-bold text-gray-800">${d.val || 0} <span class="text-[10px] text-gray-400 font-normal">/ Min ${d.target}</span></p>
                         </div>
                     </div>
                    `;

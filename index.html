@@ -6,11 +6,16 @@
     <title>Login Pegawai</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>body { background-color: #f0fdf4; }</style> </head>
+    <style>body { background-color: #f0fdf4; }</style>
+</head>
 <body class="flex items-center justify-center min-h-screen px-4">
 
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
         <div class="bg-emerald-600 p-6 text-center">
+            <div class="bg-white/10 rounded-xl p-2 w-fit mx-auto mb-3 backdrop-blur-sm">
+                <img src="logo.png" alt="Logo Instansi" class="h-20 w-auto object-contain mx-auto">
+            </div>
+            
             <h1 class="text-2xl font-bold text-white tracking-wide">Yaumiyah App</h1>
             <p class="text-emerald-100 text-sm">Monitoring Amalan Harian</p>
         </div>
@@ -36,7 +41,6 @@
 
     <script src="config.js"></script>
     <script>
-        // Cek sesi, kalau sudah login langsung lempar
         if(getSession()) window.location.href = 'dashboard.html';
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -49,17 +53,13 @@
             btn.textContent = 'Memproses...';
             errMsg.classList.add('hidden');
 
-            // Cek ke tabel users manual
             const { data, error } = await db
                 .from('users')
                 .select('*')
                 .eq('username', userIn)
-                .eq('password', passIn) // Note: Utk app sederhana ini oke, utk production password harus di-hash
+                .eq('password', passIn) 
                 .single();
 
-            console.log("Data:", data);
-            console.log("Error:", error);
-            
             if (error || !data) {
                 errMsg.textContent = "Username atau Password salah!";
                 errMsg.classList.remove('hidden');
@@ -71,5 +71,4 @@
         });
     </script>
 </body>
-
 </html>
