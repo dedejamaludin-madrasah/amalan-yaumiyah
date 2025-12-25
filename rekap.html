@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Riwayat Amalan</title>
+    <title>Jurnal Ibadah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,7 +19,7 @@
 
     <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
         <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
-        <p class="text-emerald-100 text-xs">Klik kartu untuk melihat rincian</p>
+        <p class="text-emerald-100 text-xs">Evaluasi harian (Hijau = Tuntas, Merah = Belum)</p>
     </div>
 
     <div id="listContainer" class="px-4 max-w-md mx-auto space-y-3">
@@ -46,15 +46,18 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // Definisi Target Minimal untuk mendapat Ceklis Hijau
-        const TARGETS = {
-            shalat_jamaah: 5,
-            shalat_rawatib: 10, // Anggap 10 rakaat sudah bagus
-            shalat_tahajjud: 2,
-            shalat_dhuha: 2,
-            tilawah_juz: 1,
-            matsurat: 1
-        };
+        // Definisi Target & Label Pendek
+        const ITEMS = [
+            { key: 'shalat_jamaah', label: 'Jamaah', target: 5 },
+            { key: 'shalat_rawatib', label: 'Rawatib', target: 12 },
+            { key: 'shalat_tahajjud', label: 'Tahajjud', target: 2 },
+            { key: 'shalat_dhuha', label: 'Dhuha', target: 2 },
+            { key: 'tilawah_juz', label: 'Tilawah', target: 1 },
+            { key: 'matsurat', label: 'Matsurat', target: 1 },
+            { key: 'shaum_sunnah', label: 'Puasa', target: true },
+            { key: 'infaq', label: 'Infaq', target: true },
+            { key: 'olahraga', label: 'Sport', target: true }
+        ];
 
         async function loadHistory() {
             const { data } = await db.from('daily_amalan')
@@ -75,47 +78,46 @@
                 const dateObj = new Date(item.date);
                 const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
 
-                // Cek Pencapaian
-                const achieved = [];
-                if(item.shalat_jamaah >= TARGETS.shalat_jamaah) achieved.push('Jamaah');
-                if(item.shalat_tahajjud >= TARGETS.shalat_tahajjud) achieved.push('Tahajjud');
-                if(item.tilawah_juz >= TARGETS.tilawah_juz) achieved.push('Tilawah');
-                if(item.shaum_sunnah) achieved.push('Puasa');
-                if(item.infaq) achieved.push('Infaq');
+                // Generate 9 Badges (Compact Grid)
+                let badgesHTML = '';
+                ITEMS.forEach(conf => {
+                    const val = item[conf.key] || 0;
+                    // Cek sukses: jika target boolean (true) atau angka (>= target)
+                    const isSuccess = conf.target === true ? val : val >= conf.target;
+                    
+                    const colorClass = isSuccess 
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                        : 'bg-red-50 text-red-400 border-red-100 opacity-80';
+                    
+                    const icon = isSuccess ? 'fa-check' : 'fa-xmark';
 
-                // Render Ringkasan (Hanya Icon Ceklis Hijau)
-                let summaryIcons = '';
-                if(achieved.length > 0) {
-                    summaryIcons = `<div class="flex gap-1 flex-wrap text-emerald-600 text-xs">
-                        ${achieved.map(a => `<span class="bg-emerald-100 px-2 py-1 rounded-full"><i class="fa-solid fa-check mr-1"></i>${a}</span>`).join('')}
-                    </div>`;
-                } else {
-                    summaryIcons = `<span class="text-xs text-gray-400 italic">Tidak ada target tercapai</span>`;
-                }
+                    badgesHTML += `
+                        <div class="flex items-center gap-1 px-2 py-1 rounded border ${colorClass} text-[10px] font-bold">
+                            <i class="fa-solid ${icon}"></i> ${conf.label}
+                        </div>
+                    `;
+                });
 
                 const html = `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer" onclick="toggleCard(this)">
-                        <div class="p-4 flex justify-between items-center">
-                            <div class="flex-1">
-                                <h3 class="font-bold text-gray-800">${dateStr}</h3>
-                                <div class="mt-2">${summaryIcons}</div>
+                        <div class="p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-gray-800 text-sm">${dateStr}</h3>
+                                <i class="fa-solid fa-chevron-down text-gray-300 chevron text-xs"></i>
                             </div>
-                            <i class="fa-solid fa-chevron-down text-gray-300 chevron"></i>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${badgesHTML}
+                            </div>
                         </div>
 
                         <div class="details-box bg-gray-50 border-t border-gray-100">
-                            <div class="p-4 grid grid-cols-2 gap-y-3 text-sm text-gray-600">
-                                <div class="flex justify-between border-b border-gray-200 pb-1 mr-2"><span>🕌 Jamaah</span> <span class="font-bold text-gray-800">${item.shalat_jamaah}/5</span></div>
-                                <div class="flex justify-between border-b border-gray-200 pb-1 ml-2"><span>☀️ Rawatib</span> <span class="font-bold text-gray-800">${item.shalat_rawatib} Rkt</span></div>
-                                <div class="flex justify-between border-b border-gray-200 pb-1 mr-2"><span>🌙 Tahajjud</span> <span class="font-bold text-gray-800">${item.shalat_tahajjud} Rkt</span></div>
-                                <div class="flex justify-between border-b border-gray-200 pb-1 ml-2"><span>🌤️ Dhuha</span> <span class="font-bold text-gray-800">${item.shalat_dhuha} Rkt</span></div>
-                                <div class="flex justify-between border-b border-gray-200 pb-1 mr-2"><span>📖 Tilawah</span> <span class="font-bold text-gray-800">${item.tilawah_juz} Juz</span></div>
-                                <div class="flex justify-between border-b border-gray-200 pb-1 ml-2"><span>🤲 Matsurat</span> <span class="font-bold text-gray-800">${item.matsurat}x</span></div>
-                                <div class="col-span-2 flex gap-4 mt-2 justify-center">
-                                    <span class="${item.infaq ? 'text-green-600 font-bold' : 'text-gray-400'}"><i class="fa-solid fa-hand-holding-dollar"></i> Infaq</span>
-                                    <span class="${item.shaum_sunnah ? 'text-blue-600 font-bold' : 'text-gray-400'}"><i class="fa-solid fa-utensils"></i> Puasa</span>
-                                    <span class="${item.olahraga ? 'text-orange-600 font-bold' : 'text-gray-400'}"><i class="fa-solid fa-person-running"></i> Olahraga</span>
-                                </div>
+                            <div class="p-4 grid grid-cols-2 gap-y-2 text-xs text-gray-600">
+                                <div>Jamaah: <b class="text-gray-900">${item.shalat_jamaah}</b>/5</div>
+                                <div>Rawatib: <b class="text-gray-900">${item.shalat_rawatib}</b>/12</div>
+                                <div>Tahajjud: <b class="text-gray-900">${item.shalat_tahajjud}</b>/2</div>
+                                <div>Dhuha: <b class="text-gray-900">${item.shalat_dhuha}</b>/2</div>
+                                <div>Tilawah: <b class="text-gray-900">${item.tilawah_juz}</b> Juz</div>
+                                <div>Matsurat: <b class="text-gray-900">${item.matsurat}</b> x</div>
                             </div>
                         </div>
                     </div>
@@ -125,7 +127,7 @@
         }
 
         function toggleCard(element) {
-            // Tutup yang lain dulu (opsional, biar rapi)
+            // Tutup yang lain (accordion effect)
             document.querySelectorAll('.expanded').forEach(el => {
                 if(el !== element) el.classList.remove('expanded');
             });

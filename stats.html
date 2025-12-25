@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Statistik Perbandingan</title>
+    <title>Statistik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,21 +13,26 @@
 
     <div class="bg-white p-6 rounded-b-3xl shadow-sm mb-4">
         <h1 class="font-bold text-2xl text-gray-800">Capaian Amalan</h1>
-        <p class="text-gray-500 text-xs">Bandingkan keistiqomahanmu dengan rata-rata kantor</p>
         
-        <div class="flex bg-gray-100 rounded-lg p-1 mt-4">
+        <div class="flex gap-6 text-xs text-gray-500 mt-2 mb-4">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-emerald-500 rounded"></div> 
+                <span class="font-bold">Saya</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-gray-300 rounded"></div> 
+                <span class="font-bold">Rata-rata Pegawai</span>
+            </div>
+        </div>
+        
+        <div class="flex bg-gray-100 rounded-lg p-1">
             <button onclick="switchMode('today')" id="btnToday" class="flex-1 py-1 rounded-md text-sm font-bold bg-white shadow text-emerald-600 transition">Hari Ini</button>
             <button onclick="switchMode('month')" id="btnMonth" class="flex-1 py-1 rounded-md text-sm font-bold text-gray-500 transition">Bulan Ini</button>
         </div>
     </div>
 
-    <div id="statsContainer" class="px-4 max-w-md mx-auto space-y-5">
+    <div id="statsContainer" class="px-4 max-w-md mx-auto space-y-4">
         <p class="text-center text-gray-400 mt-10"><i class="fa-solid fa-circle-notch fa-spin"></i> Menghitung data...</p>
-    </div>
-
-    <div class="px-4 mt-4 mb-2 flex justify-center gap-6 text-[10px] text-gray-400">
-        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-emerald-500 rounded"></div> Saya</div>
-        <div class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-300 rounded"></div> Rata-rata Kantor</div>
     </div>
 
     <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
@@ -50,15 +55,17 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // Konfigurasi Target
+        // Konfigurasi Lengkap (Ditambah Dhuha & Olahraga)
         const CONFIG = [
-            { key: 'shalat_jamaah', label: 'Shalat Jamaah (5x)', target: 5 },
-            { key: 'shalat_rawatib', label: 'Rawatib (Min 10 Rkt)', target: 10 }, // Asumsi target moderat
-            { key: 'shalat_tahajjud', label: 'Tahajjud (Min 2 Rkt)', target: 2 },
-            { key: 'tilawah_juz', label: 'Tilawah (1 Juz)', target: 1 },
+            { key: 'shalat_jamaah', label: 'Shalat Jamaah', target: 5 },
+            { key: 'shalat_rawatib', label: 'Rawatib', target: 12 },
+            { key: 'shalat_tahajjud', label: 'Tahajjud', target: 2 },
+            { key: 'shalat_dhuha', label: 'Shalat Dhuha', target: 2 }, // Baru
+            { key: 'tilawah_juz', label: 'Tilawah Quran', target: 1 },
             { key: 'matsurat', label: 'Matsurat', target: 1 },
             { key: 'shaum_sunnah', label: 'Puasa Sunnah', target: true },
-            { key: 'infaq', label: 'Infaq', target: true }
+            { key: 'infaq', label: 'Infaq', target: true },
+            { key: 'olahraga', label: 'Olahraga', target: true } // Baru
         ];
 
         let mode = 'today'; 
@@ -67,48 +74,43 @@
             const container = document.getElementById('statsContainer');
             container.innerHTML = '<p class="text-center text-gray-400 mt-10"><i class="fa-solid fa-circle-notch fa-spin"></i> Menghitung data...</p>';
 
-            // 1. Ambil Total Pegawai (Untuk pembagi)
+            // 1. Ambil Total Pegawai
             const { count: totalUsers } = await db.from('users').select('*', { count: 'exact', head: true });
             if(!totalUsers) { container.innerHTML = 'Error data user.'; return; }
 
-            // 2. Siapkan Range Tanggal
+            // 2. Siapkan Filter & Divider
             const today = new Date();
             let dateFilter = {};
             let dividerDays = 1;
 
             if(mode === 'today') {
                 const dateStr = today.toISOString().split('T')[0];
-                dateFilter = { column: 'date', op: 'eq', val: dateStr };
+                dateFilter = { op: 'eq', val: dateStr };
                 dividerDays = 1;
             } else {
-                // Bulan ini (dari tanggal 1 sampai hari ini)
                 const y = today.getFullYear();
                 const m = today.getMonth(); 
                 const start = new Date(y, m, 1).toISOString().split('T')[0];
-                const end = new Date(y, m + 1, 0).toISOString().split('T')[0]; // Sampai akhir bulan
-                
-                // Pembagi persentase bulanan adalah jumlah hari yang sudah berlalu
-                dividerDays = today.getDate(); 
-
-                dateFilter = { column: 'date', op: 'gte', val: start, val2: end };
+                const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
+                dividerDays = today.getDate(); // Jumlah hari yg sudah lewat bulan ini
+                dateFilter = { op: 'range', val: start, val2: end };
             }
 
-            // 3. Ambil Data
-            // Query 1: Data SAYA saja
+            // 3. Ambil Data (Saya & Global)
             let qMy = db.from('daily_amalan').select('*').eq('user_id', user.id);
-            if(mode==='today') qMy = qMy.eq('date', dateFilter.val);
-            else qMy = qMy.gte('date', dateFilter.val).lte('date', dateFilter.val2);
+            let qAll = db.from('daily_amalan').select('*');
+
+            if(mode === 'today') {
+                qMy = qMy.eq('date', dateFilter.val);
+                qAll = qAll.eq('date', dateFilter.val);
+            } else {
+                qMy = qMy.gte('date', dateFilter.val).lte('date', dateFilter.val2);
+                qAll = qAll.gte('date', dateFilter.val).lte('date', dateFilter.val2);
+            }
             
             const { data: myData } = await qMy;
-
-            // Query 2: Data SEMUA ORANG (Global)
-            let qAll = db.from('daily_amalan').select('*');
-            if(mode==='today') qAll = qAll.eq('date', dateFilter.val);
-            else qAll = qAll.gte('date', dateFilter.val).lte('date', dateFilter.val2);
-
             const { data: allData } = await qAll;
 
-            // 4. Hitung Persentase
             renderComparison(myData || [], allData || [], totalUsers, dividerDays);
         }
 
@@ -117,55 +119,40 @@
             container.innerHTML = '';
 
             CONFIG.forEach(item => {
-                // A. Hitung Score SAYA (%)
-                // Rumus: (Jumlah hari berhasil target / Hari berlalu) * 100
-                let mySuccessCount = 0;
+                // Hitung % Saya
+                let mySuccess = 0;
                 myData.forEach(row => {
                     const val = row[item.key];
-                    if(item.target === true) { if(val) mySuccessCount++; }
-                    else { if(val >= item.target) mySuccessCount++; }
+                    if(item.target === true) { if(val) mySuccess++; }
+                    else { if(val >= item.target) mySuccess++; }
                 });
-                
-                // Jika mode 'today', daysPassed = 1. Jadi kalau sukses = 100%, gagal = 0%.
-                const myPercent = Math.round((mySuccessCount / daysPassed) * 100);
+                const myPercent = Math.round((mySuccess / daysPassed) * 100);
 
-
-                // B. Hitung Score KANTOR (%)
-                // Rumus: (Total semua keberhasilan pegawai / (Total Pegawai * Hari berlalu)) * 100
-                let globalSuccessCount = 0;
+                // Hitung % Global (Rata-rata Pegawai)
+                let globalSuccess = 0;
                 allData.forEach(row => {
                     const val = row[item.key];
-                    if(item.target === true) { if(val) globalSuccessCount++; }
-                    else { if(val >= item.target) globalSuccessCount++; }
+                    if(item.target === true) { if(val) globalSuccess++; }
+                    else { if(val >= item.target) globalSuccess++; }
                 });
+                const globalPercent = Math.round((globalSuccess / (totalUsers * daysPassed)) * 100);
 
-                const globalTotalOpportunities = totalUsers * daysPassed;
-                const globalPercent = Math.round((globalSuccessCount / globalTotalOpportunities) * 100);
-
-                // Render Kartu
+                // Render Kartu (Bar Lebih Tinggi, Tanpa Label Teks)
                 const html = `
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex justify-between items-end mb-2">
                             <h3 class="font-bold text-gray-700 text-sm">${item.label}</h3>
                         </div>
                         
-                        <div class="mb-2">
-                            <div class="flex justify-between text-[10px] mb-1">
-                                <span class="text-emerald-600 font-bold">Saya</span>
-                                <span class="text-emerald-600 font-bold">${myPercent}%</span>
-                            </div>
-                            <div class="w-full bg-emerald-100 rounded-full h-2">
-                                <div class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: ${myPercent}%"></div>
+                        <div class="relative w-full bg-emerald-100 rounded-md h-5 mb-2 overflow-hidden">
+                            <div class="bg-emerald-500 h-full rounded-md flex items-center justify-end pr-2 transition-all duration-1000" style="width: ${Math.max(myPercent, 5)}%">
+                                <span class="text-[10px] text-white font-bold">${myPercent}%</span>
                             </div>
                         </div>
 
-                        <div>
-                            <div class="flex justify-between text-[10px] mb-1">
-                                <span class="text-gray-400">Rata-rata Kantor</span>
-                                <span class="text-gray-500">${globalPercent}%</span>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-2">
-                                <div class="bg-gray-400 h-2 rounded-full transition-all duration-1000" style="width: ${globalPercent}%"></div>
+                        <div class="relative w-full bg-gray-100 rounded-md h-5 overflow-hidden">
+                            <div class="bg-gray-400 h-full rounded-md flex items-center justify-end pr-2 transition-all duration-1000" style="width: ${Math.max(globalPercent, 5)}%">
+                                <span class="text-[10px] text-white font-bold">${globalPercent}%</span>
                             </div>
                         </div>
                     </div>
