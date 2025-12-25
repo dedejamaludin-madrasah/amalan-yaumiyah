@@ -62,17 +62,20 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // KONFIGURASI TARGET LENGKAP
+        // KONFIGURASI TARGET (Dengan Frekuensi)
+        // freq: 'daily' (Pembagi = Jumlah Hari)
+        // freq: 'weekly' (Pembagi = Jumlah Pekan)
         const CONFIG = [
-            { key: 'shalat_jamaah', label: 'Shalat Jamaah (Minimal 3 kali)', target: 3 },
-            { key: 'shalat_rawatib', label: 'Shalat Rawatib (Minimal 6 rakaat)', target: 6 },
-            { key: 'shalat_tahajjud', label: 'Shalat Tahajjud (Minimal 2 rakaat)', target: 2 },
-            { key: 'shalat_dhuha', label: 'Shalat Dhuha (Minimal 2 rakaat)', target: 2 },
-            { key: 'tilawah_juz', label: 'Tilawah (Minimal 1 juz)', target: 1 },
-            { key: 'matsurat', label: 'Matsurat (Minimal 1x)', target: 1 },
-            { key: 'shaum_sunnah', label: 'Puasa Sunnah', target: true },
-            { key: 'infaq', label: 'Infaq', target: true },
-            { key: 'olahraga', label: 'Olahraga', target: true }
+            { key: 'shalat_jamaah', label: 'Shalat Jamaah (Min 3x)', target: 3, freq: 'daily' },
+            { key: 'shalat_rawatib', label: 'Rawatib (Min 6 Rkt)', target: 6, freq: 'daily' },
+            { key: 'shalat_tahajjud', label: 'Tahajjud (Min 2 Rkt)', target: 2, freq: 'daily' },
+            { key: 'shalat_dhuha', label: 'Shalat Dhuha (Min 2 Rkt)', target: 2, freq: 'daily' },
+            { key: 'tilawah_juz', label: 'Tilawah (Min 1 juz)', target: 1, freq: 'daily' },
+            { key: 'matsurat', label: 'Matsurat (Min 1x)', target: 1, freq: 'daily' },
+            { key: 'infaq', label: 'Infaq', target: true, freq: 'daily' },
+            // TARGET MINGGUAN
+            { key: 'shaum_sunnah', label: 'Puasa Sunnah (1x/Pekan)', target: true, freq: 'weekly' }, 
+            { key: 'olahraga', label: 'Olahraga (1x/Pekan)', target: true, freq: 'weekly' }
         ];
 
         let mode = 'today'; 
@@ -86,18 +89,21 @@
 
             const today = new Date();
             let dateFilter = {};
-            let dividerDays = 1;
+            let daysPassed = 1;
 
             if(mode === 'today') {
                 const dateStr = today.toISOString().split('T')[0];
                 dateFilter = { op: 'eq', val: dateStr };
-                dividerDays = 1;
+                daysPassed = 1;
             } else {
                 const y = today.getFullYear();
                 const m = today.getMonth(); 
                 const start = new Date(y, m, 1).toISOString().split('T')[0];
                 const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
-                dividerDays = today.getDate();
+                
+                // Hitung hari yang sudah lewat bulan ini
+                daysPassed = today.getDate(); 
+                
                 dateFilter = { op: 'range', val: start, val2: end };
             }
 
@@ -115,30 +121,61 @@
             const { data: myData } = await qMy;
             const { data: allData } = await qAll;
 
-            renderComparison(myData || [], allData || [], totalUsers, dividerDays);
+            renderComparison(myData || [], allData || [], totalUsers, daysPassed);
         }
 
         function renderComparison(myData, allData, totalUsers, daysPassed) {
             const container = document.getElementById('statsContainer');
             container.innerHTML = '';
 
+            // Hitung Jumlah Pekan yg sudah lewat (untuk target mingguan)
+            // Rumus: Hari ke-X dibagi 7, dibulatkan ke atas.
+            // Contoh: Hari ke-10 = 10/7 = 1.4 -> Dibulatkan jadi 2 Pekan.
+            const weeksPassed = Math.ceil(daysPassed / 7);
+
             CONFIG.forEach(item => {
-                let mySuccess = 0;
+                // Tentukan Pembagi (Divider)
+                let divider = 0;
+                
+                if (mode === 'today') {
+                    // Kalau mode harian, pembaginya selalu 1 (Target hari ini tercapai atau tidak)
+                    divider = 1;
+                } else {
+                    // Kalau mode bulanan, cek frekuensinya
+                    if (item.freq === 'weekly') {
+                        divider = weeksPassed;
+                    } else {
+                        divider = daysPassed;
+                    }
+                }
+
+                // --- 1. Hitung % SAYA ---
+                let mySuccessCount = 0;
                 myData.forEach(row => {
                     const val = row[item.key];
-                    if(item.target === true) { if(val) mySuccess++; }
-                    else { if(val >= item.target) mySuccess++; }
+                    if(item.target === true) { if(val) mySuccessCount++; }
+                    else { if(val >= item.target) mySuccessCount++; }
                 });
-                const myPercent = Math.round((mySuccess / daysPassed) * 100);
 
-                let globalSuccess = 0;
+                // Cap di 100% (kalau dia rajin banget misal puasa 2x seminggu, tetap 100%)
+                let myPercent = Math.round((mySuccessCount / divider) * 100);
+                if(myPercent > 100) myPercent = 100;
+
+
+                // --- 2. Hitung % RATA-RATA PEGAWAI ---
+                let globalSuccessCount = 0;
                 allData.forEach(row => {
                     const val = row[item.key];
-                    if(item.target === true) { if(val) globalSuccess++; }
-                    else { if(val >= item.target) globalSuccess++; }
+                    if(item.target === true) { if(val) globalSuccessCount++; }
+                    else { if(val >= item.target) globalSuccessCount++; }
                 });
-                const globalPercent = Math.round((globalSuccess / (totalUsers * daysPassed)) * 100);
 
+                // Total Peluang Global = (Jumlah User) x (Divider per User)
+                const globalTotalOpportunities = totalUsers * divider;
+                let globalPercent = Math.round((globalSuccessCount / globalTotalOpportunities) * 100);
+                if(globalPercent > 100) globalPercent = 100;
+
+                // Render HTML
                 const html = `
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                         <div class="flex justify-between items-end mb-2">
