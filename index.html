@@ -4,13 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>Login Pegawai</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#059669">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>body { background-color: #f0fdf4; }</style>
 </head>
-<body class="flex items-center justify-center min-h-screen px-4">
+<body class="flex flex-col items-center justify-center min-h-screen px-4">
 
-    <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div id="installContainer" class="hidden mb-6 w-full max-w-sm">
+        <button id="btnInstall" class="w-full bg-emerald-800 text-white p-3 rounded-xl shadow-lg flex items-center justify-between hover:bg-emerald-900 transition animate-bounce">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-lg">
+                    <i class="fa-solid fa-download"></i>
+                </div>
+                <div class="text-left">
+                    <p class="font-bold text-sm">Install Aplikasi</p>
+                    <p class="text-[10px] text-emerald-200">Lebih cepat & hemat kuota</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs opacity-50"></i>
+        </button>
+    </div>
+
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden relative z-10">
         <div class="bg-emerald-600 p-6 text-center">
             <div class="bg-white/10 rounded-xl p-2 w-fit mx-auto mb-3 backdrop-blur-sm">
                 <img src="logo.png" alt="Logo Instansi" class="h-20 w-auto object-contain mx-auto">
@@ -41,6 +60,38 @@
 
     <script src="config.js"></script>
     <script>
+        // --- LOGIC PWA INSTALL ---
+        let deferredPrompt;
+        const installContainer = document.getElementById('installContainer');
+        const btnInstall = document.getElementById('btnInstall');
+
+        // 1. Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').then(() => { console.log('Service Worker Registered'); });
+        }
+
+        // 2. Cek apakah bisa diinstall
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Cegah Chrome langsung menampilkan prompt default
+            e.preventDefault();
+            deferredPrompt = e;
+            // Tampilkan tombol install buatan kita
+            installContainer.classList.remove('hidden');
+        });
+
+        // 3. Aksi saat tombol diklik
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installContainer.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // --- LOGIC LOGIN (EXISTING) ---
         if(getSession()) window.location.href = 'dashboard.html';
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
