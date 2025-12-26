@@ -17,29 +17,27 @@
 </head>
 <body>
 
-    <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40 flex justify-between items-start">
-        <div>
-            <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
-            
-            <div class="flex flex-col gap-1 mt-2 text-[10px] text-emerald-50">
-                <div class="flex items-center gap-2">
-                    <span class="bg-emerald-100 text-emerald-700 w-4 h-4 rounded flex items-center justify-center border border-emerald-200">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                    <span>Target minimal tercapai</span>
-                </div>
-                <div class="flex items-center gap-2">
-                     <span class="bg-red-50 text-red-400 w-4 h-4 rounded flex items-center justify-center border border-red-100 opacity-80">
-                        <i class="fa-solid fa-xmark text-[10px]"></i>
-                    </span>
-                    <span>Target minimal belum tercapai</span>
+    <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
+                
+                <div class="flex gap-4 text-xs text-white mt-2 mb-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-emerald-100 rounded border border-white/50"></div> 
+                        <span class="font-medium">Tercapai</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-red-50 rounded border border-white/50 opacity-80"></div> 
+                        <span class="font-medium">Belum Tercapai</span>
+                    </div>
                 </div>
             </div>
-
+            
+            <button onclick="logout()" class="bg-emerald-800 p-2 rounded-full text-xs hover:bg-emerald-900 transition shadow-sm">
+                <i class="fa-solid fa-power-off text-white"></i>
+            </button>
         </div>
-        <button onclick="logout()" class="bg-emerald-800 p-2 rounded-full text-xs hover:bg-emerald-900 transition shadow-sm">
-            <i class="fa-solid fa-power-off text-white"></i>
-        </button>
     </div>
 
     <div id="listContainer" class="px-4 max-w-md mx-auto space-y-3">
@@ -68,12 +66,12 @@
 
         // Konfigurasi Target Jurnal
         const ITEMS = [
-            { key: 'shalat_jamaah', label: 'Jamaah', target: 3 }, // Min 3
-            { key: 'shalat_rawatib', label: 'Rawatib', target: 6 }, // Min 6
-            { key: 'shalat_tahajjud', label: 'Tahajjud', target: 2 }, // Min 2
+            { key: 'shalat_jamaah', label: 'Jamaah', target: 3 },
+            { key: 'shalat_rawatib', label: 'Rawatib', target: 6 },
+            { key: 'shalat_tahajjud', label: 'Tahajjud', target: 2 },
             { key: 'shalat_dhuha', label: 'Dhuha', target: 2 },
-            { key: 'tilawah_juz', label: 'Tilawah', target: 1 }, // Min 1
-            { key: 'matsurat', label: 'Matsurat', target: 1 }, // Min 1
+            { key: 'tilawah_juz', label: 'Tilawah', target: 1 },
+            { key: 'matsurat', label: 'Matsurat', target: 1 },
             { key: 'shaum_sunnah', label: 'Puasa', target: true },
             { key: 'infaq', label: 'Infaq', target: true },
             { key: 'olahraga', label: 'Olahraga', target: true }
@@ -98,7 +96,6 @@
                 const dateObj = new Date(item.date);
                 const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
 
-                // 1. Generate Badges
                 let badgesHTML = '';
                 ITEMS.forEach(conf => {
                     const val = item[conf.key] || 0;
@@ -116,7 +113,6 @@
                     `;
                 });
 
-                // 2. Generate Detail Grid
                 const detailList = [
                     { label: 'Jamaah', val: item.shalat_jamaah, max: 5, target: 3, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
                     { label: 'Rawatib', val: item.shalat_rawatib, max: 12, target: 6, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
@@ -152,7 +148,6 @@
                                 ${badgesHTML}
                             </div>
                         </div>
-
                         <div class="details-box bg-gray-50 border-t border-gray-100">
                             <div class="p-3 grid grid-cols-2 gap-2">
                                 ${detailsHTML}
