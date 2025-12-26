@@ -7,11 +7,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { background-color: #f8fafc; padding-bottom: 100px; }</style>
+    <style>body { background: var(--bg-main); padding-bottom: 100px; }
+:root{
+  --bg-main:#f6f7f4;
+  --bg-card:#ffffff;
+  --bg-header:#064e3b;
+  --bg-accent:#059669;
+  --bg-soft:#ecfdf5;
+  --text-main:#1f2937;
+  --text-muted:#6b7280;
+  --text-invert:#ffffff;
+  --accent-gold:#d4af37;
+}
+body{ background: var(--bg-main); color: var(--text-main); font-size:18px; }
+</style>
 </head>
-<body>
+<body class="bg-[var(--bg-main)] text-[var(--text-main)]">
 
-    <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
+    <div class="text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 sticky top-0 z-40 bg-gradient-to-br from-emerald-900 via-emerald-700 to-emerald-600">
         <div class="flex justify-between items-start">
             <div>
                 <h1 class="font-bold text-2xl">Capaian Amalan Pegawai</h1>
@@ -32,32 +45,85 @@
             </button>
         </div>
 
-        <div class="flex bg-emerald-800/30 p-1 rounded-lg backdrop-blur-sm mt-4">
-            <button onclick="switchMode('today')" id="btnToday" class="flex-1 py-1.5 rounded-md text-xs font-bold transition shadow-sm bg-white text-emerald-700">Hari Ini</button>
-            <button onclick="switchMode('month')" id="btnMonth" class="flex-1 py-1.5 rounded-md text-xs font-bold transition text-emerald-100 hover:text-white">Bulan Ini</button>
+        <div class="flex bg-white/10 p-1 rounded-xl backdrop-blur-sm mt-4 gap-1">
+            <button onclick="switchMode('today')" id="btnToday" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-emerald-800 shadow-sm">Hari Ini</button>
+            <button onclick="switchMode('month')" id="btnMonth" class="flex-1 py-2 rounded-lg text-xs font-bold transition text-emerald-50 hover:text-white">Bulan Ini</button>
         </div>
+        <p class="text-[11px] text-emerald-100/90 mt-2">Pilih mode statistik: fokus hari ini atau akumulasi bulan berjalan.</p>
     </div>
 
-    <div id="statsContainer" class="px-4 max-w-md mx-auto space-y-4">
+    <div class="px-4 max-w-md mx-auto -mt-3 mb-4">
+                <div id="scoreboard" class="bg-white/90 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-xl p-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-[11px] uppercase tracking-wider text-gray-400 font-extrabold">Dashboard</p>
+                            <h2 class="text-lg font-extrabold text-gray-800 leading-tight">Skor Istiqamah</h2>
+                            <p id="scoreNote" class="text-[12px] text-gray-500 mt-1">Mengolah perbandingan…</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[11px] text-gray-400 font-bold">Saya</p>
+                            <div class="text-3xl font-black text-emerald-700" id="scoreMe">–</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                            <p class="text-[10px] text-gray-400 font-extrabold uppercase">Rata-rata pegawai</p>
+                            <p class="text-base font-black text-gray-800" id="scoreAll">–</p>
+                            <p class="text-[10px] text-gray-400">pada mode ini</p>
+                        </div>
+                        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-3">
+                            <p class="text-[10px] text-gray-400 font-extrabold uppercase">Delta</p>
+                            <p class="text-base font-black" id="scoreDelta">–</p>
+                            <p class="text-[10px] text-gray-400">dibanding rata-rata</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between text-[11px] text-gray-500 font-bold">
+                            <span>Posisi</span>
+                            <span id="scoreHint">–</span>
+                        </div>
+                        <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden mt-1">
+                            <div id="scoreBar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-800" style="width: 5%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-[12px] text-gray-600">
+                        <span class="font-extrabold text-gray-800">Sorotan:</span>
+                        <span id="spotlight">–</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="statsContainer" class="px-4 max-w-md mx-auto space-y-4">
         <p class="text-center text-gray-400 mt-10"><i class="fa-solid fa-circle-notch fa-spin"></i> Menghitung data...</p>
     </div>
 
-    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
-        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
-            <i class="fa-solid fa-pen-to-square text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Input</span>
+    <div class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 max-w-md mx-auto z-50">
+        <div class="flex justify-between px-5 py-3">
+            <a href="dashboard.html" class="flex flex-col items-center transition text-gray-400 hover:text-emerald-600">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-transparent text-inherit">
+                <i class="fa-solid fa-pen-to-square text-xl"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-1">Input</span>
         </a>
-        <a href="rekap.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
-            <i class="fa-solid fa-list-check text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Jurnal</span>
+            <a href="rekap.html" class="flex flex-col items-center transition text-gray-400 hover:text-emerald-600">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-transparent text-inherit">
+                <i class="fa-solid fa-list-check text-xl"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-1">Jurnal</span>
         </a>
-        <a href="stats.html" class="flex flex-col items-center text-emerald-600">
-            <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Statistik</span>
+            <a href="stats.html" class="flex flex-col items-center transition text-emerald-700">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-emerald-100 text-emerald-700">
+                <i class="fa-solid fa-chart-pie text-xl"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-1">Statistik</span>
         </a>
+        </div>
     </div>
 
-    <script src="config.js"></script>
+<script src="config.js"></script>
     <script>
         const user = getSession();
         if(!user) window.location.href = 'index.html';
@@ -66,16 +132,16 @@
         // freq: 'daily' (Pembagi = Jumlah Hari)
         // freq: 'weekly' (Pembagi = Jumlah Pekan)
         const CONFIG = [
-            { key: 'shalat_jamaah', label: 'Shalat Jamaah (Minimal 3x/hari)', target: 3, freq: 'daily' },
-            { key: 'shalat_rawatib', label: 'Rawatib (Minimal 6 rakaat/hari)', target: 6, freq: 'daily' },
-            { key: 'shalat_tahajjud', label: 'Tahajjud (Minimal 2 rakaat/hari)', target: 2, freq: 'daily' },
-            { key: 'shalat_dhuha', label: 'Shalat Dhuha (Minimal 2 rakaat/hari)', target: 2, freq: 'daily' },
-            { key: 'tilawah_juz', label: 'Tilawah (Minimal 1 juz/hari)', target: 1, freq: 'daily' },
-            { key: 'matsurat', label: 'Matsurat (Minimal 1x/hari)', target: 1, freq: 'daily' },
-            { key: 'infaq', label: 'Infaq (Minimal 1x/hari)', target: true, freq: 'daily' },
+            { key: 'shalat_jamaah', label: 'Shalat Jamaah', sub: 'Minimal 3x/hari', target: 3, freq: 'daily' },
+            { key: 'shalat_rawatib', label: 'Rawatib', sub: 'Minimal 6 rakaat/hari', target: 6, freq: 'daily' },
+            { key: 'shalat_tahajjud', label: 'Tahajjud', sub: 'Minimal 2 rakaat/hari', target: 2, freq: 'daily' },
+            { key: 'shalat_dhuha', label: 'Shalat Dhuha', sub: 'Minimal 2 rakaat/hari', target: 2, freq: 'daily' },
+            { key: 'tilawah_juz', label: 'Tilawah', sub: 'Minimal 1 juz/hari', target: 1, freq: 'daily' },
+            { key: 'matsurat', label: 'Matsurat', sub: 'Minimal 1x/hari', target: 1, freq: 'daily' },
+            { key: 'infaq', label: 'Infaq', sub: 'Minimal 1x/hari', target: true, freq: 'daily' },
             // TARGET MINGGUAN
-            { key: 'shaum_sunnah', label: 'Puasa Sunnah (Minimal 1x/pekan)', target: true, freq: 'weekly' }, 
-            { key: 'olahraga', label: 'Olahraga (Minimal 1x/pekan)', target: true, freq: 'weekly' }
+            { key: 'shaum_sunnah', label: 'Puasa Sunnah', sub: 'Minimal 1x/pekan', target: true, freq: 'weekly' }, 
+            { key: 'olahraga', label: 'Olahraga', sub: 'Minimal 1x/pekan', target: true, freq: 'weekly' }
         ];
 
         let mode = 'today'; 
@@ -133,6 +199,7 @@
             // Contoh: Hari ke-10 = 10/7 = 1.4 -> Dibulatkan jadi 2 Pekan.
             const weeksPassed = Math.ceil(daysPassed / 7);
 
+            const buckets = [];
             CONFIG.forEach(item => {
                 // Tentukan Pembagi (Divider)
                 let divider = 0;
@@ -175,34 +242,98 @@
                 let globalPercent = Math.round((globalSuccessCount / globalTotalOpportunities) * 100);
                 if(globalPercent > 100) globalPercent = 100;
 
+                buckets.push({ label: item.label, myPercent, globalPercent, delta: myPercent - globalPercent });
+
                 // Render HTML
                 const html = `
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex justify-between items-end mb-2">
-                            <h3 class="font-bold text-gray-700 text-sm">${item.label}</h3>
-                        </div>
-                        
-                        <div class="relative w-full bg-blue-50 rounded-md h-5 mb-2 overflow-hidden">
-                            <div class="bg-blue-500 h-full rounded-md flex items-center justify-end pr-2 transition-all duration-1000" style="width: ${Math.max(myPercent, 5)}%">
-                                <span class="text-[10px] text-white font-bold">${myPercent}%</span>
-                            </div>
-                        </div>
-
-                        <div class="relative w-full bg-gray-100 rounded-md h-5 overflow-hidden">
-                            <div class="bg-gray-400 h-full rounded-md flex items-center justify-end pr-2 transition-all duration-1000" style="width: ${Math.max(globalPercent, 5)}%">
-                                <span class="text-[10px] text-white font-bold">${globalPercent}%</span>
-                            </div>
-                        </div>
+    <div class="bg-[var(--bg-card)] p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex-1">
+                <h3 class="font-extrabold text-gray-800 text-[14px] leading-snug">${item.label}</h3>
+                                <p class="text-[12px] text-gray-400 mt-0.5">${item.sub || ""}</p>
+                
+            </div>
+            <div class="w-[48%] min-w-[170px]">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 justify-end">
+                    <div class="relative w-full bg-blue-50 rounded-full h-4 overflow-hidden">
+                        <div class="bg-blue-500 h-full rounded-full transition-all duration-1000" style="width: ${Math.max(myPercent, 5)}%"></div>
                     </div>
-                `;
+                    <div class="w-10 text-right text-[11px] font-black text-blue-600">${myPercent}%</div>
+                </div>
+
+                <div class="flex items-center gap-2 justify-end">
+                    <div class="relative w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+                        <div class="bg-gray-400 h-full rounded-full transition-all duration-1000" style="width: ${Math.max(globalPercent, 5)}%"></div>
+                    </div>
+                    <div class="w-10 text-right text-[11px] font-black text-gray-500">${globalPercent}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+`;
                 container.innerHTML += html;
             });
+
+            updateScoreboard(buckets, mode);
         }
+
+        
+        function updateScoreboard(buckets, mode){
+            const meEl = document.getElementById('scoreMe');
+            const allEl = document.getElementById('scoreAll');
+            const deltaEl = document.getElementById('scoreDelta');
+            const noteEl = document.getElementById('scoreNote');
+            const barEl = document.getElementById('scoreBar');
+            const hintEl = document.getElementById('scoreHint');
+            const spotEl = document.getElementById('spotlight');
+
+            if(!buckets || buckets.length === 0){
+                meEl.textContent = "0";
+                allEl.textContent = "0";
+                deltaEl.textContent = "0";
+                barEl.style.width = "5%";
+                noteEl.textContent = "Belum ada data untuk dihitung.";
+                hintEl.textContent = "–";
+                spotEl.textContent = "–";
+                return;
+            }
+
+            const me = Math.round(buckets.reduce((a,b)=>a+b.myPercent,0) / buckets.length);
+            const all = Math.round(buckets.reduce((a,b)=>a+b.globalPercent,0) / buckets.length);
+            const delta = me - all;
+
+            meEl.textContent = String(me);
+            allEl.textContent = String(all);
+
+            deltaEl.textContent = (delta>=0?"+":"") + String(delta);
+            deltaEl.className = "text-base font-black " + (delta>=0 ? "text-emerald-700" : "text-rose-700");
+
+            const vibe = me >= 80 ? "Level stabil. Tinggal jaga ritme."
+                       : me >= 55 ? "Sudah bagus. Naikkan yang bolong-bolong."
+                       : "Mulai dari yang paling mudah diulang dulu.";
+            noteEl.textContent = (mode==="today" ? "Mode Hari Ini" : "Mode Bulan Ini") + " • " + vibe;
+
+            barEl.style.width = `${Math.max(me,5)}%`;
+
+            hintEl.textContent = delta>=0 ? "Di atas rata-rata" : "Di bawah rata-rata";
+
+            // Spotlight: best positive delta and worst negative delta
+            const best = [...buckets].sort((a,b)=>b.delta-a.delta)[0];
+            const worst = [...buckets].sort((a,b)=>a.delta-b.delta)[0];
+
+            const bestMsg = best ? `${best.label} (+${best.delta}%)` : "–";
+            const worstMsg = worst ? `${worst.label} (${worst.delta}%)` : "–";
+
+            spotEl.textContent = `Naikkan: ${worstMsg}. Pertahankan: ${bestMsg}.`;
+        }
+        
 
         function switchMode(m) {
             mode = m;
-            const activeClass = "flex-1 py-1.5 rounded-md text-xs font-bold transition shadow-sm bg-white text-emerald-700";
-            const inactiveClass = "flex-1 py-1.5 rounded-md text-xs font-bold transition text-emerald-100 hover:text-white";
+            const activeClass = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-emerald-800 shadow-sm";
+            const inactiveClass = "flex-1 py-2 rounded-lg text-xs font-bold transition text-emerald-50 hover:text-white";
 
             document.getElementById('btnToday').className = m === 'today' ? activeClass : inactiveClass;
             document.getElementById('btnMonth').className = m === 'month' ? activeClass : inactiveClass;

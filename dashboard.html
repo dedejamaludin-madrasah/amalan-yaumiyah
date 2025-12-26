@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8fafc; padding-bottom: 100px; }
+        body { background: var(--bg-main); padding-bottom: 100px; }
         /* Custom Date Picker Style */
         input[type="date"] {
             background: rgba(255,255,255,0.2);
@@ -24,11 +24,24 @@
             filter: invert(1);
             cursor: pointer;
         }
-    </style>
+    
+:root{
+  --bg-main:#f6f7f4;
+  --bg-card:#ffffff;
+  --bg-header:#064e3b;
+  --bg-accent:#059669;
+  --bg-soft:#ecfdf5;
+  --text-main:#1f2937;
+  --text-muted:#6b7280;
+  --text-invert:#ffffff;
+  --accent-gold:#d4af37;
+}
+body{ background: var(--bg-main); color: var(--text-main); font-size:18px; }
+</style>
 </head>
-<body>
+<body class="bg-[var(--bg-main)] text-[var(--text-main)]">
 
-    <div class="fixed top-0 left-0 w-full bg-emerald-600 text-white z-50 shadow-md rounded-b-3xl">
+    <div class="fixed top-0 left-0 w-full text-white z-50 shadow-xl rounded-b-[2.5rem] bg-gradient-to-br from-emerald-900 via-emerald-700 to-emerald-600">
         <div class="px-6 pt-6 pb-2 flex justify-between items-center">
             <div>
                 <p class="text-emerald-100 text-xs mb-1">Assalamu'alaikum,</p>
@@ -56,22 +69,30 @@
             </div>
     </div>
 
-    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
-        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
-            <i class="fa-solid fa-pen-to-square text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Input</span>
+    <div class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 max-w-md mx-auto z-50">
+        <div class="flex justify-between px-5 py-3">
+            <a href="dashboard.html" class="flex flex-col items-center transition text-emerald-700">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-emerald-100 text-emerald-700">
+                <i class="fa-solid fa-pen-to-square text-xl"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-1">Input</span>
         </a>
-        <a href="rekap.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
-            <i class="fa-solid fa-list-check text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Jurnal</span>
+            <a href="rekap.html" class="flex flex-col items-center transition text-gray-400 hover:text-emerald-600">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-transparent text-inherit">
+                <i class="fa-solid fa-list-check text-xl"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-1">Jurnal</span>
         </a>
-        <a href="stats.html" class="flex flex-col items-center text-emerald-600">
-            <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Statistik</span>
+            <a href="stats.html" class="flex flex-col items-center transition text-gray-400 hover:text-emerald-600">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-transparent text-inherit">
+                <i class="fa-solid fa-chart-pie text-xl"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-1">Statistik</span>
         </a>
+        </div>
     </div>
 
-    <script src="config.js"></script>
+<script src="config.js"></script>
     <script>
         const user = getSession();
         if(!user) window.location.href = 'index.html';
@@ -132,24 +153,24 @@
 
                 if(item.type === 'count') {
                     controlHTML = `
-                        <div class="flex items-center bg-gray-100 rounded-lg p-1">
-                            <button onclick="update('${item.key}', ${val - 1})" class="w-8 h-8 flex items-center justify-center bg-white rounded text-red-500 shadow-sm hover:bg-red-50 font-bold disabled:opacity-50" ${val <= 0 ? 'disabled' : ''}>-</button>
+                        <div class="flex items-center bg-gray-50 rounded-xl p-1.5 border border-gray-100">
+                            <button onclick="update('${item.key}', ${val - 1})" class="w-9 h-9 flex items-center justify-center bg-white rounded-lg border border-gray-200 text-gray-500 hover:text-red-500 hover:bg-red-50 font-bold disabled:opacity-50" ${val <= 0 ? 'disabled' : ''}>-</button>
                             <span class="w-8 text-center font-bold text-gray-700">${val}</span>
-                            <button onclick="update('${item.key}', ${val + 1}, ${item.max})" class="w-8 h-8 flex items-center justify-center bg-white rounded text-emerald-600 shadow-sm hover:bg-emerald-50 font-bold disabled:opacity-50" ${val >= item.max ? 'disabled' : ''}>+</button>
+                            <button onclick="update('${item.key}', ${val + 1}, ${item.max})" class="w-9 h-9 flex items-center justify-center bg-white rounded-lg border border-gray-200 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 font-bold disabled:opacity-50" ${val >= item.max ? 'disabled' : ''}>+</button>
                         </div>
                     `;
                 } else {
                     controlHTML = `
-                        <button onclick="update('${item.key}', ${!val})" class="w-10 h-10 rounded-lg flex items-center justify-center border-2 transition ${val ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 text-gray-300'}">
+                        <button onclick="update('${item.key}', ${!val})" class="w-10 h-10 rounded-xl flex items-center justify-center border-2 transition ${val ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 text-gray-300'}">
                             <i class="fa-solid fa-check text-lg"></i>
                         </button>
                     `;
                 }
 
                 const cardHtml = `
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between transition active:scale-95">
+                    <div class="bg-[var(--bg-card)] p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition active:scale-95 hover:shadow-md">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <div class="w-11 h-11 rounded-xl bg-[var(--bg-soft)] flex items-center justify-center text-emerald-700">
                                 <i class="fa-solid ${item.icon}"></i>
                             </div>
                             <div>
