@@ -8,46 +8,58 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8fafc; padding-bottom: 120px; font-size: 18px; }
-        .text-xs { font-size: 0.85rem; }
-        .text-sm { font-size: 1rem; }
+        body { background-color: #f8fafc; padding-bottom: 100px; }
         .details-box { transition: max-height 0.3s ease-out; max-height: 0; overflow: hidden; }
-        .expanded .details-box { max-height: 600px; }
+        .expanded .details-box { max-height: 500px; transition: max-height 0.5s ease-in; }
+        .chevron { transition: transform 0.3s; }
+        .expanded .chevron { transform: rotate(180deg); }
     </style>
 </head>
 <body>
 
-    <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40 flex justify-between items-start">
-        <div>
-            <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
-            <div class="flex gap-4 text-sm text-white mt-3">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center border border-white/30"><i class="fa-solid fa-check text-xs"></i></div> 
-                    <span class="font-medium">Tercapai</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-red-50 text-red-400 rounded flex items-center justify-center border border-white/30"><i class="fa-solid fa-xmark text-xs"></i></div> 
-                    <span class="font-medium">Belum</span>
+    <div class="bg-emerald-600 text-white p-6 rounded-b-3xl shadow-lg mb-6 sticky top-0 z-40">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="font-bold text-2xl">Jurnal Ibadah Harian</h1>
+                
+                <div class="flex gap-5 text-xs text-white mt-3 mb-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center border border-white/30 opacity-90">
+                            <i class="fa-solid fa-check text-[11px]"></i>
+                        </div> 
+                        <span class="font-medium">Tercapai</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 bg-red-50 text-red-400 rounded flex items-center justify-center border border-white/30 opacity-90">
+                            <i class="fa-solid fa-xmark text-[11px]"></i>
+                        </div> 
+                        <span class="font-medium">Belum Tercapai</span>
+                    </div>
                 </div>
             </div>
+            
+            <button onclick="logout()" class="bg-emerald-800 p-2 rounded-full text-xs hover:bg-emerald-900 transition shadow-sm">
+                <i class="fa-solid fa-power-off text-white"></i>
+            </button>
         </div>
-        <button onclick="logout()" class="bg-emerald-800 p-2.5 rounded-full hover:bg-emerald-900 transition shadow-sm"><i class="fa-solid fa-power-off"></i></button>
     </div>
 
-    <div id="listContainer" class="px-4 max-w-md mx-auto space-y-4"></div>
+    <div id="listContainer" class="px-4 max-w-md mx-auto space-y-3">
+        <p class="text-center text-gray-400 mt-10 animate-pulse">Memuat riwayat...</p>
+    </div>
 
-    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-4 border border-gray-100 max-w-md mx-auto z-50">
+    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
         <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
-            <i class="fa-solid fa-pen-to-square text-2xl mb-1"></i>
-            <span class="text-xs font-bold">Input</span>
+            <i class="fa-solid fa-pen-to-square text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">Input</span>
         </a>
         <a href="rekap.html" class="flex flex-col items-center text-emerald-600">
-            <i class="fa-solid fa-list-check text-2xl mb-1"></i>
-            <span class="text-xs font-bold">Jurnal</span>
+            <i class="fa-solid fa-list-check text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">Jurnal</span>
         </a>
         <a href="stats.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
-            <i class="fa-solid fa-chart-pie text-2xl mb-1"></i>
-            <span class="text-xs font-bold">Statistik</span>
+            <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">Statistik</span>
         </a>
     </div>
 
@@ -55,6 +67,7 @@
     <script>
         const user = getSession();
         if(!user) window.location.href = 'index.html';
+
         const ITEMS = [
             { key: 'shalat_jamaah', label: 'Jamaah', target: 3 },
             { key: 'shalat_rawatib', label: 'Rawatib', target: 6 },
@@ -68,32 +81,94 @@
         ];
 
         async function loadHistory() {
-            const { data } = await db.from('daily_amalan').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(30);
+            const { data } = await db.from('daily_amalan')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('date', { ascending: false })
+                .limit(30);
+            
             const container = document.getElementById('listContainer');
-            container.innerHTML = data && data.length ? '' : '<p class="text-center text-gray-400">Belum ada data.</p>';
+            container.innerHTML = '';
+
+            if(!data || data.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 mt-10">Belum ada data amalan.</p>';
+                return;
+            }
+
             data.forEach(item => {
-                let badges = '';
-                ITEMS.forEach(c => {
-                    const ok = c.target === true ? item[c.key] : item[c.key] >= c.target;
-                    badges += `<div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded border ${ok ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-400 border-red-100 opacity-70'} text-[11px] font-bold"><i class="fa-solid ${ok?'fa-check':'fa-xmark'}"></i> ${c.label}</div>`;
+                const dateObj = new Date(item.date);
+                const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
+
+                let badgesHTML = '';
+                ITEMS.forEach(conf => {
+                    const val = item[conf.key] || 0;
+                    const isSuccess = conf.target === true ? val : val >= conf.target;
+                    
+                    const colorClass = isSuccess 
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                        : 'bg-red-50 text-red-400 border-red-100 opacity-60';
+                    const icon = isSuccess ? 'fa-check' : 'fa-xmark';
+
+                    badgesHTML += `
+                        <div class="flex items-center gap-1 px-2 py-1 rounded border ${colorClass} text-[10px] font-bold">
+                            <i class="fa-solid ${icon}"></i> ${conf.label}
+                        </div>
+                    `;
                 });
-                container.innerHTML += `
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" onclick="this.classList.toggle('expanded')">
-                        <div class="p-4"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-gray-800 text-base italic">${new Date(item.date).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'short'})}</h3><i class="fa-solid fa-chevron-down text-gray-300 text-xs"></i></div>
-                        <div class="flex flex-wrap gap-2">${badges}</div></div>
-                        <div class="details-box bg-gray-50 border-t border-gray-100"><div class="p-4 grid grid-cols-2 gap-3">
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs border border-gray-100">
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-mosque"></i></div>
-                                <div><p class="text-[10px] text-gray-400 font-bold uppercase">Jamaah</p><p class="text-sm font-bold text-gray-800">${item.shalat_jamaah}/3</p></div>
+
+                const detailList = [
+                    { label: 'Jamaah', val: item.shalat_jamaah, target: 3, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Rawatib', val: item.shalat_rawatib, target: 6, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
+                    { label: 'Tahajjud', val: item.shalat_tahajjud, target: 2, icon: 'fa-moon', color: 'text-indigo-600 bg-indigo-50' },
+                    { label: 'Dhuha', val: item.shalat_dhuha, target: 2, icon: 'fa-sun', color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Tilawah', val: item.tilawah_juz, target: 1, unit:'Juz', icon: 'fa-book-quran', color: 'text-green-600 bg-green-50' },
+                    { label: 'Matsurat', val: item.matsurat, target: 1, unit:'x', icon: 'fa-book-open-reader', color: 'text-teal-600 bg-teal-50' },
+                ];
+
+                let detailsHTML = '';
+                detailList.forEach(d => {
+                   detailsHTML += `
+                    <div class="flex items-center gap-3 p-2 bg-white rounded shadow-sm border border-gray-100">
+                        <div class="w-8 h-8 rounded-full ${d.color} flex items-center justify-center text-xs">
+                            <i class="fa-solid ${d.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">${d.label}</p>
+                            <p class="text-sm font-bold text-gray-800">${d.val || 0} <span class="text-[10px] text-gray-400 font-normal">/ Min ${d.target}</span></p>
+                        </div>
+                    </div>
+                   `;
+                });
+
+                const html = `
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer" onclick="toggleCard(this)">
+                        <div class="p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-gray-800 text-sm">${dateStr}</h3>
+                                <i class="fa-solid fa-chevron-down text-gray-300 chevron text-xs"></i>
                             </div>
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-xs border border-gray-100">
-                                <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-lg"><i class="fa-solid fa-person-praying"></i></div>
-                                <div><p class="text-[10px] text-gray-400 font-bold uppercase">Rawatib</p><p class="text-sm font-bold text-gray-800">${item.shalat_rawatib}/6</p></div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${badgesHTML}
                             </div>
-                            </div></div>
-                    </div>`;
+                        </div>
+                        <div class="details-box bg-gray-50 border-t border-gray-100">
+                            <div class="p-3 grid grid-cols-2 gap-2">
+                                ${detailsHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
             });
         }
+
+        function toggleCard(element) {
+            document.querySelectorAll('.expanded').forEach(el => {
+                if(el !== element) el.classList.remove('expanded');
+            });
+            element.classList.toggle('expanded');
+        }
+
         loadHistory();
     </script>
 </body>
