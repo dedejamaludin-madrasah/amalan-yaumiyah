@@ -22,13 +22,17 @@
             <div>
                 <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
                 
-                <div class="flex gap-4 text-xs text-white mt-2 mb-1">
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-emerald-100 rounded border border-white/50"></div> 
+                <div class="flex gap-4 text-[10px] text-white mt-2 mb-1">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center border border-white/30">
+                            <i class="fa-solid fa-check"></i>
+                        </div> 
                         <span class="font-medium">Tercapai</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 bg-red-50 rounded border border-white/50 opacity-80"></div> 
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 bg-red-50 text-red-400 rounded flex items-center justify-center border border-white/30 opacity-90">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div> 
                         <span class="font-medium">Belum Tercapai</span>
                     </div>
                 </div>
@@ -64,7 +68,6 @@
         const user = getSession();
         if(!user) window.location.href = 'index.html';
 
-        // Konfigurasi Target Jurnal
         const ITEMS = [
             { key: 'shalat_jamaah', label: 'Jamaah', target: 3 },
             { key: 'shalat_rawatib', label: 'Rawatib', target: 6 },
@@ -114,12 +117,12 @@
                 });
 
                 const detailList = [
-                    { label: 'Jamaah', val: item.shalat_jamaah, max: 5, target: 3, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
-                    { label: 'Rawatib', val: item.shalat_rawatib, max: 12, target: 6, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
-                    { label: 'Tahajjud', val: item.shalat_tahajjud, max: 11, target: 2, icon: 'fa-moon', color: 'text-indigo-600 bg-indigo-50' },
-                    { label: 'Dhuha', val: item.shalat_dhuha, max: 8, target: 2, icon: 'fa-sun', color: 'text-orange-600 bg-orange-50' },
-                    { label: 'Tilawah', val: item.tilawah_juz, max: 1, unit:'Juz', target: 1, icon: 'fa-book-quran', color: 'text-green-600 bg-green-50' },
-                    { label: 'Matsurat', val: item.matsurat, max: 2, unit:'x', target: 1, icon: 'fa-book-open-reader', color: 'text-teal-600 bg-teal-50' },
+                    { label: 'Jamaah', val: item.shalat_jamaah, target: 3, icon: 'fa-mosque', color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Rawatib', val: item.shalat_rawatib, target: 6, icon: 'fa-person-praying', color: 'text-purple-600 bg-purple-50' },
+                    { label: 'Tahajjud', val: item.shalat_tahajjud, target: 2, icon: 'fa-moon', color: 'text-indigo-600 bg-indigo-50' },
+                    { label: 'Dhuha', val: item.shalat_dhuha, target: 2, icon: 'fa-sun', color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Tilawah', val: item.tilawah_juz, target: 1, unit:'Juz', icon: 'fa-book-quran', color: 'text-green-600 bg-green-50' },
+                    { label: 'Matsurat', val: item.matsurat, target: 1, unit:'x', icon: 'fa-book-open-reader', color: 'text-teal-600 bg-teal-50' },
                 ];
 
                 let detailsHTML = '';
