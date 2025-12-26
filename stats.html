@@ -51,8 +51,157 @@
 
     <script src="config.js"></script>
     <script>
-        // Logika statistik bulanan/mingguan yang sama dengan sebelumnya...
-        // ... (masukkan fungsi loadStats dan renderComparison yang sudah saya buat di sesi sebelumnya) ...
+        const user = getSession();
+        if(!user) window.location.href = 'index.html';
+
+        // KONFIGURASI TARGET (Dengan Frekuensi)
+        // freq: 'daily' (Pembagi = Jumlah Hari)
+        // freq: 'weekly' (Pembagi = Jumlah Pekan)
+        const CONFIG = [
+            { key: 'shalat_jamaah', label: 'Shalat Jamaah (Minimal 3x/hari)', target: 3, freq: 'daily' },
+            { key: 'shalat_rawatib', label: 'Rawatib (Minimal 6 rakaat/hari)', target: 6, freq: 'daily' },
+            { key: 'shalat_tahajjud', label: 'Tahajjud (Minimal 2 rakaat/hari)', target: 2, freq: 'daily' },
+            { key: 'shalat_dhuha', label: 'Shalat Dhuha (Minimal 2 rakaat/hari)', target: 2, freq: 'daily' },
+            { key: 'tilawah_juz', label: 'Tilawah (Minimal 1 juz/hari)', target: 1, freq: 'daily' },
+            { key: 'matsurat', label: 'Matsurat (Minimal 1x/hari)', target: 1, freq: 'daily' },
+            { key: 'infaq', label: 'Infaq (Minimal 1x/hari)', target: true, freq: 'daily' },
+            // TARGET MINGGUAN
+            { key: 'shaum_sunnah', label: 'Puasa Sunnah (Minimal 1x/pekan)', target: true, freq: 'weekly' }, 
+            { key: 'olahraga', label: 'Olahraga (Minimal 1x/pekan)', target: true, freq: 'weekly' }
+        ];
+
+        let mode = 'today'; 
+
+        async function loadStats() {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = '<p class="text-center text-gray-400 mt-10"><i class="fa-solid fa-circle-notch fa-spin"></i> Menghitung data...</p>';
+
+            const { count: totalUsers } = await db.from('users').select('*', { count: 'exact', head: true });
+            if(!totalUsers) { container.innerHTML = 'Error data user.'; return; }
+
+            const today = new Date();
+            let dateFilter = {};
+            let daysPassed = 1;
+
+            if(mode === 'today') {
+                const dateStr = today.toISOString().split('T')[0];
+                dateFilter = { op: 'eq', val: dateStr };
+                daysPassed = 1;
+            } else {
+                const y = today.getFullYear();
+                const m = today.getMonth(); 
+                const start = new Date(y, m, 1).toISOString().split('T')[0];
+                const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
+                
+                // Hitung hari yang sudah lewat bulan ini
+                daysPassed = today.getDate(); 
+                
+                dateFilter = { op: 'range', val: start, val2: end };
+            }
+
+            let qMy = db.from('daily_amalan').select('*').eq('user_id', user.id);
+            let qAll = db.from('daily_amalan').select('*');
+
+            if(mode === 'today') {
+                qMy = qMy.eq('date', dateFilter.val);
+                qAll = qAll.eq('date', dateFilter.val);
+            } else {
+                qMy = qMy.gte('date', dateFilter.val).lte('date', dateFilter.val2);
+                qAll = qAll.gte('date', dateFilter.val).lte('date', dateFilter.val2);
+            }
+            
+            const { data: myData } = await qMy;
+            const { data: allData } = await qAll;
+
+            renderComparison(myData || [], allData || [], totalUsers, daysPassed);
+        }
+
+        function renderComparison(myData, allData, totalUsers, daysPassed) {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = '';
+
+            // Hitung Jumlah Pekan yg sudah lewat (untuk target mingguan)
+            // Rumus: Hari ke-X dibagi 7, dibulatkan ke atas.
+            // Contoh: Hari ke-10 = 10/7 = 1.4 -> Dibulatkan jadi 2 Pekan.
+            const weeksPassed = Math.ceil(daysPassed / 7);
+
+            CONFIG.forEach(item => {
+                // Tentukan Pembagi (Divider)
+                let divider = 0;
+                
+                if (mode === 'today') {
+                    // Kalau mode harian, pembaginya selalu 1 (Target hari ini tercapai atau tidak)
+                    divider = 1;
+                } else {
+                    // Kalau mode bulanan, cek frekuensinya
+                    if (item.freq === 'weekly') {
+                        divider = weeksPassed;
+                    } else {
+                        divider = daysPassed;
+                    }
+                }
+
+                // --- 1. Hitung % SAYA ---
+                let mySuccessCount = 0;
+                myData.forEach(row => {
+                    const val = row[item.key];
+                    if(item.target === true) { if(val) mySuccessCount++; }
+                    else { if(val >= item.target) mySuccessCount++; }
+                });
+
+                // Cap di 100% (kalau dia rajin banget misal puasa 2x seminggu, tetap 100%)
+                let myPercent = Math.round((mySuccessCount / divider) * 100);
+                if(myPercent > 100) myPercent = 100;
+
+
+                // --- 2. Hitung % RATA-RATA PEGAWAI ---
+                let globalSuccessCount = 0;
+                allData.forEach(row => {
+                    const val = row[item.key];
+                    if(item.target === true) { if(val) globalSuccessCount++; }
+                    else { if(val >= item.target) globalSuccessCount++; }
+                });
+
+                // Total Peluang Global = (Jumlah User) x (Divider per User)
+                const globalTotalOpportunities = totalUsers * divider;
+                let globalPercent = Math.round((globalSuccessCount / globalTotalOpportunities) * 100);
+                if(globalPercent > 100) globalPercent = 100;
+
+                // Render HTML
+                const html = `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-end mb-2">
+                            <h3 class="font-bold text-gray-700 text-sm">${item.label}</h3>
+                        </div>
+                        
+                        <div class="relative w-full bg-blue-50 rounded-md h-5 mb-2 overflow-hidden">
+                            <div class="bg-blue-500 h-full rounded-md flex items-center justify-end pr-2 transition-all duration-1000" style="width: ${Math.max(myPercent, 5)}%">
+                                <span class="text-[10px] text-white font-bold">${myPercent}%</span>
+                            </div>
+                        </div>
+
+                        <div class="relative w-full bg-gray-100 rounded-md h-5 overflow-hidden">
+                            <div class="bg-gray-400 h-full rounded-md flex items-center justify-end pr-2 transition-all duration-1000" style="width: ${Math.max(globalPercent, 5)}%">
+                                <span class="text-[10px] text-white font-bold">${globalPercent}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function switchMode(m) {
+            mode = m;
+            const activeClass = "flex-1 py-1.5 rounded-md text-xs font-bold transition shadow-sm bg-white text-emerald-700";
+            const inactiveClass = "flex-1 py-1.5 rounded-md text-xs font-bold transition text-emerald-100 hover:text-white";
+
+            document.getElementById('btnToday').className = m === 'today' ? activeClass : inactiveClass;
+            document.getElementById('btnMonth').className = m === 'month' ? activeClass : inactiveClass;
+            loadStats();
+        }
+
+        loadStats();
     </script>
 </body>
 </html>
