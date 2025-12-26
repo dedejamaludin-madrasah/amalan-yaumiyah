@@ -8,22 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8fafc; padding-bottom: 100px; }
-        /* Custom Date Picker Style */
-        input[type="date"] {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            outline: none;
-        }
-        /* Icon kalender di date picker agar putih */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
+        body { background-color: #f8fafc; padding-bottom: 120px; font-size: 18px; }
+        .text-xs { font-size: 0.85rem; } /* Asalnya 0.75rem */
+        .text-sm { font-size: 1rem; }    /* Asalnya 0.875rem */
+        .text-lg { font-size: 1.25rem; }
     </style>
 </head>
 <body>
@@ -31,43 +19,40 @@
     <div class="fixed top-0 left-0 w-full bg-emerald-600 text-white z-50 shadow-md rounded-b-3xl">
         <div class="px-6 pt-6 pb-2 flex justify-between items-center">
             <div>
-                <p class="text-emerald-100 text-xs mb-1">Assalamu'alaikum,</p>
-                <h2 id="userNameDisplay" class="font-bold text-xl leading-none">Pegawai</h2>
+                <p class="text-emerald-100 text-sm mb-1">Assalamu'alaikum,</p>
+                <h2 id="userNameDisplay" class="font-bold text-xl leading-none italic">Pegawai</h2>
             </div>
-            <button onclick="logout()" class="bg-emerald-800 p-2 rounded-full text-xs hover:bg-emerald-900 transition">
-                <i class="fa-solid fa-power-off"></i>
+            <button onclick="logout()" class="bg-emerald-800 p-2.5 rounded-full hover:bg-emerald-900 transition shadow-sm">
+                <i class="fa-solid fa-power-off text-sm"></i>
             </button>
         </div>
-        
         <div class="px-6 pb-4 flex justify-between items-center">
-            <span class="text-xs text-emerald-100">Pilih Tanggal:</span>
-            <input type="date" id="datePicker">
+            <span class="text-sm text-emerald-100">Pilih Tanggal:</span>
+            <input type="date" id="datePicker" class="bg-white/20 border border-white/40 text-white rounded-lg px-2 py-1 text-sm outline-none">
         </div>
     </div>
 
-    <div class="h-36"></div>
+    <div class="h-40"></div>
 
     <div class="px-4 max-w-md mx-auto">
         <div id="loading" class="text-center py-10 text-gray-400">
-            <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i><br>Mengambil data...
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
         </div>
-        
-        <div id="cardContainer" class="space-y-4 hidden">
-            </div>
+        <div id="cardContainer" class="space-y-4 hidden"></div>
     </div>
 
-    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
-        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
-            <i class="fa-solid fa-pen-to-square text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Input</span>
+    <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-4 border border-gray-100 max-w-md mx-auto z-50">
+        <a href="dashboard.html" class="flex flex-col items-center text-emerald-600">
+            <i class="fa-solid fa-pen-to-square text-2xl mb-1"></i>
+            <span class="text-xs font-bold">Input</span>
         </a>
-        <a href="rekap.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
-            <i class="fa-solid fa-list-check text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Jurnal</span>
+        <a href="rekap.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
+            <i class="fa-solid fa-list-check text-2xl mb-1"></i>
+            <span class="text-xs font-bold">Jurnal</span>
         </a>
-        <a href="stats.html" class="flex flex-col items-center text-emerald-600">
-            <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
-            <span class="text-[10px] font-bold">Statistik</span>
+        <a href="stats.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
+            <i class="fa-solid fa-chart-pie text-2xl mb-1"></i>
+            <span class="text-xs font-bold">Statistik</span>
         </a>
     </div>
 
@@ -75,48 +60,28 @@
     <script>
         const user = getSession();
         if(!user) window.location.href = 'index.html';
-
         document.getElementById('userNameDisplay').innerText = user.full_name || user.username;
-        
-        // Setup Tanggal Hari Ini
         const todayStr = new Date().toISOString().split('T')[0];
         const dateInput = document.getElementById('datePicker');
         dateInput.value = todayStr;
+        dateInput.addEventListener('change', (e) => init(e.target.value));
 
-        // Event: Ganti Tanggal
-        dateInput.addEventListener('change', (e) => {
-            init(e.target.value);
-        });
-
-        // Konfigurasi Item Baru
         const items = [
-            { key: 'shalat_jamaah', title: 'Shalat Jamaah', icon: 'fa-mosque', type: 'count', max: 5, label: 'Max 5' },
-            { key: 'shalat_rawatib', title: 'Shalat Rawatib', icon: 'fa-person-praying', type: 'count', max: 12, label: 'Max 12 Rakaat' },
-            { key: 'shalat_tahajjud', title: 'Tahajjud', icon: 'fa-moon', type: 'count', max: 11, label: 'Min 2 Rakaat' },
-            { key: 'shalat_dhuha', title: 'Dhuha', icon: 'fa-sun', type: 'count', max: 8, label: 'Min 2 Rakaat' },
-            { key: 'tilawah_juz', title: 'Tilawah (Juz)', icon: 'fa-book-quran', type: 'count', max: 30, label: 'Min 1 Juz' },
+            { key: 'shalat_jamaah', title: 'Shalat Jamaah', icon: 'fa-mosque', type: 'count', max: 5, label: 'Min 3x' },
+            { key: 'shalat_rawatib', title: 'Shalat Rawatib', icon: 'fa-person-praying', type: 'count', max: 12, label: 'Min 6 Rkt' },
+            { key: 'shalat_tahajjud', title: 'Tahajjud', icon: 'fa-moon', type: 'count', max: 11, label: 'Min 2 Rkt' },
+            { key: 'shalat_dhuha', title: 'Dhuha', icon: 'fa-sun', type: 'count', max: 8, label: 'Min 2 Rkt' },
+            { key: 'tilawah_juz', title: 'Tilawah', icon: 'fa-book-quran', type: 'count', max: 30, label: 'Min 1 Juz' },
             { key: 'matsurat', title: 'Matsurat', icon: 'fa-book-open-reader', type: 'count', max: 2, label: 'Min 1x' },
-            { key: 'shaum_sunnah', title: 'Puasa Sunnah', icon: 'fa-utensils', type: 'check', label: 'Sedang puasa?' },
-            { key: 'infaq', title: 'Infaq', icon: 'fa-hand-holding-dollar', type: 'check', label: 'Sudah Infaq?' },
-            { key: 'olahraga', title: 'Olahraga', icon: 'fa-person-running', type: 'check', label: 'Sudah Olahraga?' },
+            { key: 'shaum_sunnah', title: 'Puasa Sunnah', icon: 'fa-utensils', type: 'check', label: 'Min 1x/Pekan' },
+            { key: 'infaq', title: 'Infaq', icon: 'fa-hand-holding-dollar', type: 'check', label: 'Istiqomah' },
+            { key: 'olahraga', title: 'Olahraga', icon: 'fa-person-running', type: 'check', label: 'Min 1x/Pekan' },
         ];
 
         let currentData = {};
-
         async function init(selectedDate) {
-            // Tampilkan loading
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('cardContainer').classList.add('hidden');
-
-            // Ambil data dari DB berdasarkan tanggal yang dipilih
-            const { data } = await db.from('daily_amalan')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('date', selectedDate)
-                .single();
-            
+            const { data } = await db.from('daily_amalan').select('*').eq('user_id', user.id).eq('date', selectedDate).single();
             currentData = data || { user_id: user.id, date: selectedDate };
-            
             renderUI();
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('cardContainer').classList.remove('hidden');
@@ -125,65 +90,31 @@
         function renderUI() {
             const container = document.getElementById('cardContainer');
             container.innerHTML = '';
-
             items.forEach(item => {
                 const val = currentData[item.key] || 0;
-                let controlHTML = '';
-
-                if(item.type === 'count') {
-                    controlHTML = `
-                        <div class="flex items-center bg-gray-100 rounded-lg p-1">
-                            <button onclick="update('${item.key}', ${val - 1})" class="w-8 h-8 flex items-center justify-center bg-white rounded text-red-500 shadow-sm hover:bg-red-50 font-bold disabled:opacity-50" ${val <= 0 ? 'disabled' : ''}>-</button>
-                            <span class="w-8 text-center font-bold text-gray-700">${val}</span>
-                            <button onclick="update('${item.key}', ${val + 1}, ${item.max})" class="w-8 h-8 flex items-center justify-center bg-white rounded text-emerald-600 shadow-sm hover:bg-emerald-50 font-bold disabled:opacity-50" ${val >= item.max ? 'disabled' : ''}>+</button>
-                        </div>
-                    `;
-                } else {
-                    controlHTML = `
-                        <button onclick="update('${item.key}', ${!val})" class="w-10 h-10 rounded-lg flex items-center justify-center border-2 transition ${val ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 text-gray-300'}">
-                            <i class="fa-solid fa-check text-lg"></i>
-                        </button>
-                    `;
-                }
-
-                const cardHtml = `
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between transition active:scale-95">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                <i class="fa-solid ${item.icon}"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm">${item.title}</h4>
-                                <p class="text-[10px] text-gray-400">${item.label}</p>
-                            </div>
-                        </div>
-                        ${controlHTML}
-                    </div>
-                `;
-                container.innerHTML += cardHtml;
+                let ctrl = item.type === 'count' ? `
+                    <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                        <button onclick="update('${item.key}', ${val - 1})" class="w-10 h-10 flex items-center justify-center bg-white rounded text-red-500 font-bold shadow-sm">-</button>
+                        <span class="w-10 text-center font-bold text-gray-800">${val}</span>
+                        <button onclick="update('${item.key}', ${val + 1}, ${item.max})" class="w-10 h-10 flex items-center justify-center bg-white rounded text-emerald-600 font-bold shadow-sm">+</button>
+                    </div>` : `
+                    <button onclick="update('${item.key}', ${!val})" class="w-12 h-12 rounded-xl border-2 transition ${val ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 text-gray-300'}"><i class="fa-solid fa-check text-xl"></i></button>`;
+                container.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl"><i class="fa-solid ${item.icon}"></i></div>
+                            <div><h4 class="font-bold text-gray-800 text-base">${item.title}</h4><p class="text-xs text-gray-400">${item.label}</p></div>
+                        </div>${ctrl}
+                    </div>`;
             });
         }
 
         async function update(key, val, max) {
-            if (typeof val === 'number') {
-                if (val < 0) return;
-                if (max && val > max) return;
-            }
-            
-            // Update UI instant
-            currentData[key] = val;
-            renderUI();
-
-            // Save DB dengan tanggal yang sedang dipilih
-            const dateVal = document.getElementById('datePicker').value;
-            const payload = { user_id: user.id, date: dateVal, [key]: val };
-            
-            await db.from('daily_amalan').upsert(payload, { onConflict: 'user_id, date' });
+            if (typeof val === 'number') { if (val < 0 || (max && val > max)) return; }
+            currentData[key] = val; renderUI();
+            await db.from('daily_amalan').upsert({ user_id: user.id, date: dateInput.value, [key]: val }, { onConflict: 'user_id, date' });
         }
-
-        // Load awal
         init(todayStr);
     </script>
 </body>
-
 </html>
