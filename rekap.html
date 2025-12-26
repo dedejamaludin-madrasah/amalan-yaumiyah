@@ -22,16 +22,16 @@
             <div>
                 <h1 class="font-bold text-2xl">Jurnal Ibadah</h1>
                 
-                <div class="flex gap-4 text-[10px] text-white mt-2 mb-1">
-                    <div class="flex items-center gap-1.5">
-                        <div class="w-4 h-4 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center border border-white/30">
-                            <i class="fa-solid fa-check"></i>
+                <div class="flex gap-5 text-xs text-white mt-3 mb-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 bg-emerald-100 text-emerald-700 rounded flex items-center justify-center border border-white/30">
+                            <i class="fa-solid fa-check text-[11px]"></i>
                         </div> 
                         <span class="font-medium">Tercapai</span>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <div class="w-4 h-4 bg-red-50 text-red-400 rounded flex items-center justify-center border border-white/30 opacity-90">
-                            <i class="fa-solid fa-xmark"></i>
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 bg-red-50 text-red-400 rounded flex items-center justify-center border border-white/30 opacity-95">
+                            <i class="fa-solid fa-xmark text-[11px]"></i>
                         </div> 
                         <span class="font-medium">Belum Tercapai</span>
                     </div>
@@ -49,7 +49,7 @@
     </div>
 
     <div class="fixed bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl flex justify-between px-6 py-3 border border-gray-100 max-w-md mx-auto z-50">
-        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
+        <a href="dashboard.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
             <i class="fa-solid fa-pen-to-square text-xl mb-1"></i>
             <span class="text-[10px] font-bold">Input</span>
         </a>
@@ -57,7 +57,7 @@
             <i class="fa-solid fa-list-check text-xl mb-1"></i>
             <span class="text-[10px] font-bold">Jurnal</span>
         </a>
-        <a href="stats.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600">
+        <a href="stats.html" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition">
             <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
             <span class="text-[10px] font-bold">Statistik</span>
         </a>
@@ -91,7 +91,7 @@
             container.innerHTML = '';
 
             if(!data || data.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-400">Belum ada data.</p>';
+                container.innerHTML = '<p class="text-center text-gray-400 mt-10">Belum ada data amalan.</p>';
                 return;
             }
 
