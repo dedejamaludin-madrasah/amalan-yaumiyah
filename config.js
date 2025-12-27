@@ -26,3 +26,6 @@ function getIndoDate() {
     return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 }
+
+// Web Push (Public VAPID Key) - aman disimpan di frontend
+window.APP_PUSH_PUBLIC_VAPID_KEY = "PASTE_PUBLIC_VAPID_KEY_DI_SINI";

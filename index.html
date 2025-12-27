@@ -10,47 +10,49 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { background: var(--bg-main); }
-:root{
-  --bg-main:#f6f7f4;
-  --bg-card:#ffffff;
-  --bg-header:#064e3b;
-  --bg-accent:#059669;
-  --bg-soft:#ecfdf5;
-  --text-main:#1f2937;
-  --text-muted:#6b7280;
-  --text-invert:#ffffff;
-  --accent-gold:#d4af37;
-}
-body{ background: var(--bg-main); color: var(--text-main); font-size:18px; }
-</style>
+    <style>body { background-color: #f0fdf4; }</style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen px-4 bg-[var(--bg-main)] text-[var(--text-main)]">
+<body class="flex flex-col items-center justify-center min-h-screen px-4">
 
-    <div id="installContainer" class="hidden mb-6 w-full max-w-sm">
-        <button id="btnInstall" class="w-full bg-emerald-800 text-white p-3 rounded-xl shadow-lg flex items-center justify-between hover:bg-emerald-900 transition animate-bounce">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-2 rounded-lg">
-                    <i class="fa-solid fa-download"></i>
-                </div>
-                <div class="text-left">
-                    <p class="font-bold text-sm">Install Aplikasi</p>
-                    <p class="text-[10px] text-emerald-200">Lebih cepat & hemat kuota</p>
-                </div>
+    <div id="installContainer" class="hidden mb-4 w-full max-w-sm">
+    <button id="btnInstall" class="w-full bg-emerald-800 text-white px-5 py-4 rounded-2xl shadow-lg flex items-center justify-between hover:bg-emerald-900 transition animate-bounce">
+        <div class="flex items-center gap-3">
+            <div class="bg-white/20 p-2 rounded-lg">
+                <i class="fa-solid fa-download"></i>
             </div>
-            <i class="fa-solid fa-chevron-right text-xs opacity-50"></i>
-        </button>
-    </div>
+            <div class="text-left">
+                <p class="font-bold text-sm">Install Aplikasi</p>
+                <p class="text-[10px] text-emerald-200">Lebih cepat & hemat kuota</p>
+            </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+    </button>
+</div>
 
-    <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden relative z-10">
-        <div class="p-6 text-center bg-gradient-to-br from-emerald-900 via-emerald-700 to-emerald-600">
+<div id="pushContainer" class="hidden mb-6 w-full max-w-sm">
+    <button id="btnEnablePush" class="w-full bg-emerald-700 text-white px-5 py-4 rounded-2xl shadow-lg flex items-center justify-between hover:bg-emerald-800 transition animate-bounce">
+        <div class="flex items-center gap-3">
+            <div class="bg-white/20 p-2 rounded-lg">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <div class="text-left">
+                <p class="font-bold text-sm">Aktifkan Notifikasi Harian</p>
+                <p class="text-[10px] text-emerald-100">Hadits/tafsir singkat di status bar</p>
+            </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-xs opacity-70"></i>
+    </button>
+    <p id="pushStatus" class="text-[11px] text-gray-500 mt-2 px-1"></p>
+</div>
+
+<div class="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden relative z-10">
+        <div class="bg-emerald-600 p-6 text-center">
             <div class="bg-white/10 rounded-xl p-2 w-fit mx-auto mb-3 backdrop-blur-sm">
                 <img src="logo.png" alt="Logo Instansi" class="h-20 w-auto object-contain mx-auto">
             </div>
             
             <h1 class="text-2xl font-bold text-white tracking-wide">Yaumiyah App</h1>
             <p class="text-emerald-100 text-sm">Monitoring Amalan Harian Pegawai</p>
-            <p class="text-xs text-emerald-100/90 italic mt-2">“Catatan kecil, untuk konsistensi besar.”</p>
         </div>
 
         <form id="loginForm" class="p-8 space-y-5">
@@ -64,7 +66,7 @@ body{ background: var(--bg-main); color: var(--text-main); font-size:18px; }
                 <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="••••••" required>
             </div>
 
-            <button type="submit" class="w-full py-3 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
+            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md transition transform active:scale-95">
                 MASUK SEKARANG
             </button>
             
@@ -135,5 +137,122 @@ body{ background: var(--bg-main); color: var(--text-main); font-size:18px; }
             }
         });
     </script>
+
+
+<script>
+// ===== Web Push: tombol aktifkan notifikasi harian (hadits/tafsir) =====
+(function initPushCTA(){
+    const pushContainer = document.getElementById('pushContainer');
+    const btn = document.getElementById('btnEnablePush');
+    const statusEl = document.getElementById('pushStatus');
+    const setStatus = (t) => { if(statusEl) statusEl.textContent = t || ''; };
+
+    const supported = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window) &&
+                      (location.protocol === 'https:' || location.hostname === 'localhost');
+    if (!supported) return;
+
+    // Selalu tampil dulu (biar tidak "hilang misterius")
+    pushContainer?.classList.remove('hidden');
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(base64);
+        return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+    }
+
+    async function ensureServiceWorker() {
+        // pakai path root biar konsisten di semua halaman
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        return reg;
+    }
+
+    async function checkExistingSubscription() {
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+            if (Notification.permission === 'granted' && sub) {
+                // sudah aktif -> sembunyikan CTA
+                pushContainer?.classList.add('hidden');
+                localStorage.setItem('push_enabled', '1');
+                return true;
+            }
+        } catch (e) {
+            console.warn('checkExistingSubscription error', e);
+        }
+        // belum aktif -> pastikan CTA muncul
+        localStorage.removeItem('push_enabled');
+        pushContainer?.classList.remove('hidden');
+        return false;
+    }
+
+    // Cek subscription yang sudah ada (tanpa mengandalkan localStorage)
+    checkExistingSubscription();
+
+    async function enablePush() {
+        setStatus('Menyiapkan notifikasi...');
+
+        const reg = await ensureServiceWorker();
+
+        // Jika sudah granted, lanjut subscribe; kalau default, minta izin; kalau denied, stop
+        let perm = Notification.permission;
+        if (perm === 'default') perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+            setStatus(perm === 'denied' ? 'Izin notifikasi diblokir di browser.' : 'Izin notifikasi ditolak.');
+            return;
+        }
+
+        const publicKey = window.APP_PUSH_PUBLIC_VAPID_KEY;
+        if (!publicKey || publicKey.includes('PASTE_')) {
+            setStatus('PUBLIC VAPID KEY belum diisi di config.js');
+            return;
+        }
+
+        setStatus('Mendaftarkan perangkat...');
+
+        // reuse existing subscription if any
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+        }
+
+        const json = sub.toJSON();
+        const payload = {
+            endpoint: sub.endpoint,
+            p256dh: json.keys.p256dh,
+            auth: json.keys.auth,
+            user_agent: navigator.userAgent,
+            platform: /Android/i.test(navigator.userAgent) ? 'android' : 'other',
+            is_active: true
+        };
+
+        const { error } = await db
+            .from('push_subscriptions')
+            .upsert(payload, { onConflict: 'endpoint' });
+
+        if (error) {
+            console.error(error);
+            setStatus('Gagal menyimpan subscription.');
+            return;
+        }
+
+        localStorage.setItem('push_enabled', '1');
+        setStatus('Notifikasi harian aktif ✅');
+        // Hilangkan tombol setelah berhasil
+        pushContainer?.classList.add('hidden');
+    }
+
+    btn?.addEventListener('click', () => {
+        enablePush().catch((e) => {
+            console.error(e);
+            setStatus(e?.message || String(e));
+        });
+    });
+})();
+</script>
+
 </body>
 </html>
