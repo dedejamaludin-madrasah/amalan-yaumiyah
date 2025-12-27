@@ -28,4 +28,4 @@ function getIndoDate() {
 }
 
 // Web Push (Public VAPID Key) - aman disimpan di frontend
-window.APP_PUSH_PUBLIC_VAPID_KEY = "PASTE_PUBLIC_VAPID_KEY_DI_SINI";
+window.APP_PUSH_PUBLIC_VAPID_KEY = "BAZKvBchATdERoL2vbim4a_QQvLGSYQhj9tYXoR5GpIbeZs2zs5kU5PP0UDQnHbzo58JJrToS_GdEyZKE7AhJ8w";
